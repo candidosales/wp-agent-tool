@@ -32,6 +32,46 @@ cargo build --release
 
 The compiled binary will be available at `target/release/wp-agent`.
 
+## Building for Different Platforms
+
+### macOS & Linux
+
+To build natively on macOS or Linux, simply run:
+
+```bash
+cargo build --release
+```
+
+The binary will be located at `target/release/wp-agent`.
+
+### Windows
+
+To build natively on Windows (via PowerShell or Command Prompt):
+
+```bash
+cargo build --release
+```
+
+The executable will be located at `target\release\wp-agent.exe`.
+
+### Cross-Compilation (Mac to Linux)
+
+If you are developing on macOS and need to deploy to a Linux server (e.g., Digital Ocean VPS), you can cross-compile:
+
+1.  **Add Linux Target**:
+    ```bash
+    rustup target add x86_64-unknown-linux-musl
+    ```
+2.  **Install Linker** (using Homebrew):
+    ```bash
+    brew install messense/macos-cross-toolchains/x86_64-unknown-linux-musl
+    ```
+3.  **Build**:
+    ```bash
+    cargo build --release --target x86_64-unknown-linux-musl
+    ```
+    The static binary will be at `target/x86_64-unknown-linux-musl/release/wp-agent`.
+
 ## Usage
 
 Navigate to your WordPress project directory (or any directory, if you want to specify the path manually) and run:
