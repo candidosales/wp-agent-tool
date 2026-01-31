@@ -23,3 +23,6 @@ pub mod database;
 pub mod plugins;
 pub mod system;
 pub mod network;
+pub mod security;
+pub mod performance;
+pub mod maintenance;

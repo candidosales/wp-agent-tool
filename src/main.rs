@@ -12,6 +12,9 @@ use diagnosis::database::DatabaseDiagnosis;
 use diagnosis::plugins::PluginDiagnosis;
 use diagnosis::system::SystemDiagnosis;
 use diagnosis::network::NetworkDiagnosis;
+use diagnosis::security::SecurityDiagnosis;
+use diagnosis::performance::PerformanceDiagnosis;
+use diagnosis::maintenance::MaintenanceDiagnosis;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
@@ -48,6 +51,9 @@ fn main() -> anyhow::Result<()> {
         Box::new(PluginDiagnosis),
         Box::new(SystemDiagnosis),
         Box::new(NetworkDiagnosis),
+        Box::new(SecurityDiagnosis),
+        Box::new(PerformanceDiagnosis),
+        Box::new(MaintenanceDiagnosis),
     ];
     
     let mut reports = Vec::new();
