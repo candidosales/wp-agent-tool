@@ -23,8 +23,6 @@ jobs:
             os: macOS-15
           - target: aarch64-apple-darwin
             os: macos-14
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
 
     steps:
       - name: Checkout code
@@ -38,23 +36,12 @@ jobs:
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Create archive (Unix)
-        if: runner.os != 'Windows'
+      - name: Create archive
         run: |
           cd target/${{ matrix.target }}/release
           tar -czf ../../../wp-agent-${{ matrix.target }}.tar.gz wp-agent
           cd ../../..
           shasum -a 256 wp-agent-${{ matrix.target }}.tar.gz > wp-agent-${{ matrix.target }}.tar.gz.sha256
-
-      - name: Create archive (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          cd target/${{ matrix.target }}/release
-          Compress-Archive -Path wp-agent.exe -DestinationPath ../../../wp-agent-${{ matrix.target }}.zip
-          cd ../../..
-          $hash = (Get-FileHash wp-agent-${{ matrix.target }}.zip -Algorithm SHA256).Hash.ToLower()
-          "$hash  wp-agent-${{ matrix.target }}.zip" | Out-File -FilePath wp-agent-${{ matrix.target }}.zip.sha256 -Encoding ASCII
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v6

@@ -68,12 +68,6 @@ tar -xzf wp-agent-aarch64-apple-darwin.tar.gz
 sudo mv wp-agent /usr/local/bin/
 ```
 
-#### Windows
-
-1. Download `wp-agent-x86_64-pc-windows-msvc.zip` from the [releases page](https://github.com/candidosales/wp-agent-tool/releases)
-2. Extract `wp-agent.exe`
-3. Move it to a directory in your PATH
-
 ### Building from Source
 
 If you have Rust installed, you can build from source:
