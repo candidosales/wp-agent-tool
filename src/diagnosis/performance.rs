@@ -20,14 +20,7 @@ impl Diagnosis for PerformanceDiagnosis {
                  let query = format!("SELECT SUM(LENGTH(option_value)) FROM {}options WHERE autoload = 'yes'", prefix);
                  match wp.run(&["db", "query", &query, "--skip-column-names"], root) {
                      Ok(size_str) => {
-                         let size_bytes: u64 = size_str.trim().parse().unwrap_or(0);
-                         let size_mb = size_bytes as f64 / 1024.0 / 1024.0;
-                         details.push(format!("Autoloaded options size: {:.2} MB", size_mb));
-                         
-                         if size_mb > 1.0 {
-                             overall_status = Status::Warning;
-                             details.push("Warning: Autoloaded options size is high (> 1MB).".to_string());
-                         }
+                         self.analyze_autoload_size(&size_str, &mut overall_status, &mut details);
                      }
                      Err(_) => details.push("Could not determine autoloaded options size.".to_string()),
                  }
@@ -64,5 +57,49 @@ impl Diagnosis for PerformanceDiagnosis {
             message: "Performance Checked".to_string(),
             details,
         })
+    }
+}
+
+impl PerformanceDiagnosis {
+    fn analyze_autoload_size(&self, size_str: &str, status: &mut Status, details: &mut Vec<String>) {
+        let size_bytes: u64 = size_str.trim().parse().unwrap_or(0);
+        let size_mb = size_bytes as f64 / 1024.0 / 1024.0;
+        details.push(format!("Autoloaded options size: {:.2} MB", size_mb));
+        
+        if size_mb > 1.0 {
+            *status = Status::Warning;
+            details.push("Warning: Autoloaded options size is high (> 1MB).".to_string());
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_analyze_autoload_size_large() {
+        let diagnosis = PerformanceDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+        // 2 MB in bytes
+        let size_str = "2097152"; 
+        
+        diagnosis.analyze_autoload_size(size_str, &mut status, &mut details);
+        
+        assert_eq!(status, Status::Warning);
+        assert!(details.iter().any(|d| d.contains("Autoloaded options size: 2.00 MB")));
+    }
+
+    #[test]
+    fn test_analyze_autoload_size_small() {
+        let diagnosis = PerformanceDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+        let size_str = "102400"; 
+        
+        diagnosis.analyze_autoload_size(size_str, &mut status, &mut details);
+        
+        assert_eq!(status, Status::Ok);
     }
 }

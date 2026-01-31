@@ -75,3 +75,41 @@ impl Diagnosis for SystemDiagnosis {
         })
     }
 }
+
+impl SystemDiagnosis {
+    fn analyze_php_version(&self, version: &str, status: &mut Status, details: &mut Vec<String>) {
+        details.push(format!("PHP Version: {}", version));
+        if version.starts_with("7.") || version.starts_with("5.") {
+             *status = Status::Warning;
+             details.push("Warning: PHP version is old. Recommend upgrading to 8.0+".to_string());
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_analyze_php_version_old() {
+        let diagnosis = SystemDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+        
+        diagnosis.analyze_php_version("7.4.33", &mut status, &mut details);
+        
+        assert_eq!(status, Status::Warning);
+        assert!(details.iter().any(|d| d.contains("PHP version is old")));
+    }
+
+    #[test]
+    fn test_analyze_php_version_new() {
+        let diagnosis = SystemDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+        
+        diagnosis.analyze_php_version("8.2.0", &mut status, &mut details);
+        
+        assert_eq!(status, Status::Ok);
+    }
+}

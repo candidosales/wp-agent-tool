@@ -16,13 +16,7 @@ impl Diagnosis for MaintenanceDiagnosis {
         // Count revisions: `wp post list --post_type=revision --format=count`
         match wp.run(&["post", "list", "--post_type=revision", "--format=count"], root) {
             Ok(count_str) => {
-                let count: usize = count_str.trim().parse().unwrap_or(0);
-                details.push(format!("Found {} post revisions.", count));
-                
-                if count > 1000 {
-                    overall_status = Status::Warning;
-                    details.push("Warning: High number of post revisions (> 1000). Consider cleaning them.".to_string());
-                }
+                self.analyze_revisions(&count_str, &mut overall_status, &mut details);
             }
             Err(_) => details.push("Could not count post revisions.".to_string()),
         }
@@ -72,5 +66,57 @@ impl Diagnosis for MaintenanceDiagnosis {
             message: "Maintenance Checked".to_string(),
             details,
         })
+    }
+}
+
+impl MaintenanceDiagnosis {
+    fn analyze_revisions(&self, count_str: &str, status: &mut Status, details: &mut Vec<String>) {
+        let count: usize = count_str.trim().parse().unwrap_or(0);
+        details.push(format!("Found {} post revisions.", count));
+        
+        if count > 1000 {
+            *status = Status::Warning;
+            details.push("Warning: High number of post revisions (> 1000). Consider cleaning them.".to_string());
+        }
+    }
+
+    fn analyze_log_size(&self, size_bytes: u64, status: &mut Status, details: &mut Vec<String>) {
+        let size_mb = size_bytes as f64 / 1024.0 / 1024.0;
+        details.push(format!("debug.log found: {:.2} MB", size_mb));
+        
+        if size_mb > 50.0 {
+            *status = Status::Warning;
+            details.push("Warning: debug.log is very large (> 50MB).".to_string());
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_analyze_revisions() {
+        let diagnosis = MaintenanceDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+        
+        diagnosis.analyze_revisions("1500", &mut status, &mut details);
+        
+        assert_eq!(status, Status::Warning);
+        assert!(details.iter().any(|d| d.contains("Found 1500 post revisions")));
+    }
+
+    #[test]
+    fn test_analyze_log_size() {
+        let diagnosis = MaintenanceDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+        
+        // 60 MB
+        diagnosis.analyze_log_size(60 * 1024 * 1024, &mut status, &mut details);
+        
+        assert_eq!(status, Status::Warning);
+        assert!(details.iter().any(|d| d.contains("debug.log found: 60.00 MB")));
     }
 }
