@@ -2,7 +2,6 @@ use crate::diagnosis::{Diagnosis, DiagnosisReport, Status};
 use crate::wp::WpCli;
 use std::path::Path;
 use anyhow::Result;
-use console::style;
 
 pub struct DatabaseDiagnosis;
 

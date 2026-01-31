@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::process::Command;
 use std::path::{Path, PathBuf};
 use which::which;

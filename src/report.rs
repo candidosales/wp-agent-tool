@@ -1,5 +1,5 @@
 use crate::diagnosis::{DiagnosisReport, Status};
-use console::{style, Term};
+use console::style;
 
 pub fn display(reports: &[DiagnosisReport]) {
     println!("\n{}", style("=== WP Agent Diagnosis Report ===").bold().underlined());
