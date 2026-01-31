@@ -17,6 +17,8 @@ WP Agent is a Rust-based CLI tool designed to diagnose and analyze WordPress ins
   - **Maintenance**: Checks post revisions, expired transients, and debug log size.
 - **Summary Reporting**: key issues are highlighted in a color-coded summary report.
 
+![demo](./docs/demo.png)
+
 ## Prerequisites
 
 - **Rust**: You need to have Rust and Cargo installed to build the project.
