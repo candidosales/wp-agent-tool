@@ -15,6 +15,7 @@ impl Diagnosis for SystemDiagnosis {
         // ... (rest is same logic, just fixing the arg names)
         
         // 2. Tmp folder analysis
+        println!("    > Checking disk usage...");
         let disks = Disks::new_with_refreshed_list();
         let mut tmp_found = false;
         
@@ -40,6 +41,7 @@ impl Diagnosis for SystemDiagnosis {
         }
 
         // 3. PHP Version
+        println!("    > Checking PHP version...");
         match wp.run(&["cli", "info", "--format=json"], root) {
             Ok(output) => {
                  #[derive(serde::Deserialize)]

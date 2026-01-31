@@ -19,7 +19,8 @@ impl Diagnosis for PluginDiagnosis {
         println!("  Running Plugin Diagnosis...");
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
-
+        
+        println!("    > Fetching plugin list...");
         let output = wp.run(&["plugin", "list", "--format=json"], root)?;
         // Parse JSON
         let plugins: Vec<Plugin> = serde_json::from_str(&output)?;

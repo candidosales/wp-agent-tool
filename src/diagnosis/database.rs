@@ -12,6 +12,7 @@ impl Diagnosis for DatabaseDiagnosis {
         let mut overall_status = Status::Ok;
 
         // 1. wp db check
+        println!("    > Checking database integrity...");
         match wp.run(&["db", "check"], root) {
             Ok(output) => {
                 details.push(format!("Check: {}", output.trim()));
@@ -23,6 +24,7 @@ impl Diagnosis for DatabaseDiagnosis {
         }
 
         // 2. wp db size
+        println!("    > Checking database size...");
         match wp.run(&["db", "size", "--human-readable"], root) {
             Ok(output) => {
                  details.push(format!("Size: {}", output.trim()));
