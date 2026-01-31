@@ -57,7 +57,7 @@ jobs:
           "$hash  wp-agent-${{ matrix.target }}.zip" | Out-File -FilePath wp-agent-${{ matrix.target }}.zip.sha256 -Encoding ASCII
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wp-agent-${{ matrix.target }}
           path: |
