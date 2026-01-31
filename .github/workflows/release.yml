@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-unknown-linux-gnu
+          - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
           - target: x86_64-apple-darwin
             os: macOS-15
@@ -27,6 +27,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -93,15 +97,15 @@ jobs:
           fi
 
           print_step() {
-            printf "${BLUE}==>${NC} %s\n" "$1"
+            printf "${BLUE}==>${NC} %b\n" "$1"
           }
 
           print_success() {
-            printf "${GREEN}✓${NC} %s\n" "$1"
+            printf "${GREEN}✓${NC} %b\n" "$1"
           }
 
           print_info() {
-            printf "${YELLOW}ℹ${NC} %s\n" "$1"
+            printf "${YELLOW}ℹ${NC} %b\n" "$1"
           }
 
           get_latest_release() {
@@ -117,7 +121,7 @@ jobs:
             case "$os" in
               linux*)
                 case "$arch" in
-                  x86_64) echo "x86_64-unknown-linux-gnu" ;;
+                  x86_64) echo "x86_64-unknown-linux-musl" ;;
                   *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
                 esac
                 ;;
