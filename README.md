@@ -65,6 +65,7 @@ If you are developing on macOS and need to deploy to a Linux server (e.g., Digit
 2.  **Install Linker** (using Homebrew):
     ```bash
     brew install messense/macos-cross-toolchains/x86_64-unknown-linux-musl
+    brew install messense/macos-cross-toolchains/aarch64-unknown-linux-gnu
     ```
 3.  **Build**:
     ```bash

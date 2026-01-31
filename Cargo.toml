@@ -13,5 +13,5 @@ console = "0.15"
 dialoguer = "0.11"
 sysinfo = "0.30"
 which = "6.0"
-reqwest = { version = "0.11", features = ["blocking"] }
+reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"] }
 colored = "2.0"
