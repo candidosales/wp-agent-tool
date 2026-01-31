@@ -90,6 +90,13 @@ impl WpCli {
                  break;
             }
         }
+
+        // Fallback: Check /var/www/html
+        let default_path = PathBuf::from("/var/www/html");
+        if default_path.join("wp-config.php").exists() {
+             println!("{} WordPress root found at default location: /var/www/html", style("✔").green());
+             return Ok(default_path);
+        }
         
         // If not found, ask user
         println!("{} Could not find WordPress root (wp-config.php not found).", style("?").yellow());
