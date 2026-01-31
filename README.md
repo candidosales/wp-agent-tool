@@ -1,118 +1,103 @@
-# WP Agent Tool
+# WP Agent
 
-WP Agent is a Rust-based CLI tool designed to diagnose and analyze WordPress installations. It automates common maintenance checks and helps identify potential issues with your WordPress site setup.
+A Rust-based CLI tool for comprehensive WordPress diagnostics and maintenance.
 
-## Features
-
-- **WP-CLI Management**: Automatically checks for `wp-cli` and offers to install it locally if missing.
-- **Intelligent Root Detection**: Automatically locates your WordPress root directory or prompts if it cannot be found.
-- **Root Execution Support**: Seamlessly handles execution as root by switching to the site owner or using `--allow-root` automatically.
-- **Comprehensive Diagnosis**:
-  - **Database**: Runs integrity checks (`wp db check`) and analyzes database size.
-  - **Plugins**: Identifies plugins with available updates and lists inactive plugins.
-  - **System**: Checks PHP version and disk usage (specifically `/tmp` or root partition).
-  - **Network**: Verifies external connectivity (Google) and internal site reachability.
-  - **Security**: Verifies core checksums, checks debug mode, and audits admin users.
-  - **Performance**: Checks autoloaded options size, cron events, and object cache status.
-  - **Maintenance**: Checks post revisions, expired transients, and debug log size.
-- **Summary Reporting**: key issues are highlighted in a color-coded summary report.
+WP Agent automates common WordPress maintenance checks, helping you identify potential issues with your site setup quickly and efficiently.
 
 ![demo](./docs/demo.png)
 
+## Features
+
+- **Automatic WP-CLI Management**: Detects and installs WP-CLI if needed
+- **Smart Root Detection**: Automatically finds your WordPress installation
+- **Root Execution Support**: Handles execution as root seamlessly
+- **Comprehensive Diagnostics**:
+  - Database integrity and optimization checks
+  - Plugin updates and security audits
+  - PHP version and system resource monitoring
+  - Network connectivity verification
+  - Security checksums and debug mode detection
+  - Performance analysis (object cache, autoloaded options, cron)
+  - Maintenance checks (revisions, transients, debug logs)
+- **Color-Coded Reports**: Easy-to-read summary with OK/WARNING/ERROR indicators
+
+## Documentation
+
+- [Quickstart](#quickstart)
+- [Installation](./docs/installation.md)
+- [Basic Usage](./docs/basic-usage.md)
+- [Features](./docs/features.md)
+
+## Quickstart
+
+Install WP Agent with a single command:
+
+```bash
+curl -sSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
+```
+
+Then navigate to your WordPress directory and run:
+
+```bash
+wp-agent
+```
+
+The tool will automatically:
+
+1. Check for WP-CLI (and install it if needed)
+2. Locate your WordPress root
+3. Run comprehensive diagnostics
+4. Display a summary report
+
+For more installation options, see the [Installation Guide](./docs/installation.md).
+
 ## Prerequisites
 
-- **Rust**: You need to have Rust and Cargo installed to build the project.
-- **WP-CLI** (Optional): The tool can install a local copy if one is not found in your system path.
-- **Unix-like Environment**: Tested on macOS/Linux.
+- **Unix-like Environment**: Tested on macOS and Linux
+- **WP-CLI** (Optional): The tool can install a local copy if not found
 
-## Installation & Building
+## Development
+
+### Project Structure
+
+```
+src/
+├── main.rs              # Entry point and orchestration
+├── cli.rs               # Command-line interface
+├── wp.rs                # WP-CLI wrapper
+├── report.rs            # Report generation and display
+└── diagnosis/           # Diagnostic modules
+    ├── database.rs
+    ├── plugins.rs
+    ├── system.rs
+    ├── network.rs
+    ├── security.rs
+    ├── performance.rs
+    └── maintenance.rs
+```
+
+### Building from Source
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/candidosales/wp-agent-tool
 cd wp-agent-tool
 
 # Build the release binary
 cargo build --release
+
+# Run tests
+cargo test
+
+# The binary will be at target/release/wp-agent
 ```
 
-The compiled binary will be available at `target/release/wp-agent`.
-
-## Building for Different Platforms
-
-### macOS & Linux
-
-To build natively on macOS or Linux, simply run:
-
-```bash
-cargo build --release
-```
-
-The binary will be located at `target/release/wp-agent`.
-
-### Windows
-
-To build natively on Windows (via PowerShell or Command Prompt):
-
-```bash
-cargo build --release
-```
-
-The executable will be located at `target\release\wp-agent.exe`.
-
-### Cross-Compilation (Mac to Linux)
-
-If you are developing on macOS and need to deploy to a Linux server (e.g., Digital Ocean VPS), you can cross-compile:
-
-1.  **Add Linux Target**:
-    ```bash
-    rustup target add x86_64-unknown-linux-musl
-    ```
-2.  **Install Linker** (using Homebrew):
-    ```bash
-    brew install messense/macos-cross-toolchains/x86_64-unknown-linux-musl
-    brew install messense/macos-cross-toolchains/aarch64-unknown-linux-gnu
-    ```
-3.  **Build**:
-    ```bash
-    cargo build --release --target x86_64-unknown-linux-musl
-    ```
-    The static binary will be at `target/x86_64-unknown-linux-musl/release/wp-agent`.
-
-## Usage
-
-Navigate to your WordPress project directory (or any directory, if you want to specify the path manually) and run:
-
-```bash
-# Run from the project root
-cargo run
-
-# Or run the built binary
-./target/release/wp-agent
-```
-
-### Options
-
-```bash
-wp-agent --help
-```
-
-## How It Works
-
-1.  **Initialization**: The tool starts and checks if `wp-cli` is available.
-2.  **Root Search**: It looks for `wp-config.php` in the current directory and parent directories.
-3.  **Diagnosis**: It runs a series of checks using `wp-cli` and system utilities.
-4.  **Report**: It outputs a table illustrating the status of each module (OK, WARNING, ERROR) and details for any issues found.
-
-## Development
-
-Project structure:
-
-- `src/main.rs`: Entry point and orchestration.
-- `src/wp.rs`: Wrapper for `wp-cli` interactions.
-- `src/diagnosis/`: Modules for specific checks (Database, Plugins, System, Network, Security, Performance, Maintenance).
-- `src/report.rs`: UI logic for displaying results.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
 
 ## License
 
-[MIT]
+[MIT](./LICENSE)
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.

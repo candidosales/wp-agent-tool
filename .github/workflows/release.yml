@@ -1,0 +1,170 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-13
+          - target: aarch64-apple-darwin
+            os: macos-14
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Create archive (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar -czf ../../../wp-agent-${{ matrix.target }}.tar.gz wp-agent
+          cd ../../..
+          shasum -a 256 wp-agent-${{ matrix.target }}.tar.gz > wp-agent-${{ matrix.target }}.tar.gz.sha256
+
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd target/${{ matrix.target }}/release
+          Compress-Archive -Path wp-agent.exe -DestinationPath ../../../wp-agent-${{ matrix.target }}.zip
+          cd ../../..
+          $hash = (Get-FileHash wp-agent-${{ matrix.target }}.zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  wp-agent-${{ matrix.target }}.zip" | Out-File -FilePath wp-agent-${{ matrix.target }}.zip.sha256 -Encoding ASCII
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wp-agent-${{ matrix.target }}
+          path: |
+            wp-agent-${{ matrix.target }}.*
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Generate installer script
+        run: |
+          cat > artifacts/install.sh << 'INSTALLER_EOF'
+          #!/bin/sh
+          set -e
+
+          # WP Agent installer script
+          # Usage: curl -sSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
+
+          REPO="candidosales/wp-agent-tool"
+          BINARY_NAME="wp-agent"
+
+          get_latest_release() {
+            curl --silent "https://api.github.com/repos/$REPO/releases/latest" |
+              grep '"tag_name":' |
+              sed -E 's/.*"([^"]+)".*/\1/'
+          }
+
+          detect_platform() {
+            local os=$(uname -s | tr '[:upper:]' '[:lower:]')
+            local arch=$(uname -m)
+
+            case "$os" in
+              linux*)
+                case "$arch" in
+                  x86_64) echo "x86_64-unknown-linux-gnu" ;;
+                  *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
+                esac
+                ;;
+              darwin*)
+                case "$arch" in
+                  x86_64) echo "x86_64-apple-darwin" ;;
+                  arm64) echo "aarch64-apple-darwin" ;;
+                  *) echo "Unsupported architecture: $arch" >&2; exit 1 ;;
+                esac
+                ;;
+              *)
+                echo "Unsupported OS: $os" >&2
+                exit 1
+                ;;
+            esac
+          }
+
+          main() {
+            local version=$(get_latest_release)
+            local platform=$(detect_platform)
+            local archive="wp-agent-${platform}.tar.gz"
+            local url="https://github.com/$REPO/releases/download/$version/$archive"
+            
+            echo "Installing wp-agent $version for $platform..."
+            
+            local tmpdir=$(mktemp -d)
+            cd "$tmpdir"
+            
+            echo "Downloading $url..."
+            curl -sSfL "$url" -o "$archive"
+            
+            echo "Extracting..."
+            tar -xzf "$archive"
+            
+            local install_dir="${INSTALL_DIR:-$HOME/.local/bin}"
+            mkdir -p "$install_dir"
+            
+            echo "Installing to $install_dir..."
+            mv "$BINARY_NAME" "$install_dir/"
+            chmod +x "$install_dir/$BINARY_NAME"
+            
+            cd -
+            rm -rf "$tmpdir"
+            
+            echo ""
+            echo "wp-agent installed successfully!"
+            echo "Make sure $install_dir is in your PATH."
+            echo ""
+            echo "Run 'wp-agent --help' to get started."
+          }
+
+          main
+          INSTALLER_EOF
+          chmod +x artifacts/install.sh
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
