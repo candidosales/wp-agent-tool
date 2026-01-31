@@ -43,19 +43,12 @@ impl Diagnosis for MaintenanceDiagnosis {
         // Check content folder usually wp-content/debug.log
         let debug_log = root.join("wp-content/debug.log");
         if debug_log.exists() {
-             match std::fs::metadata(&debug_log) {
-                 Ok(metadata) => {
-                     let size = metadata.len();
-                     let size_mb = size as f64 / 1024.0 / 1024.0;
-                     details.push(format!("debug.log found: {:.2} MB", size_mb));
-                     
-                     if size_mb > 50.0 {
-                         overall_status = Status::Warning;
-                         details.push("Warning: debug.log is very large (> 50MB).".to_string());
-                     }
-                 }
-                 Err(_) => details.push("Could not read debug.log metadata.".to_string()),
-             }
+              match std::fs::metadata(&debug_log) {
+                  Ok(metadata) => {
+                      self.analyze_log_size(metadata.len(), &mut overall_status, &mut details);
+                  }
+                  Err(_) => details.push("Could not read debug.log metadata.".to_string()),
+              }
         } else {
             details.push("No debug.log found (good).".to_string());
         }

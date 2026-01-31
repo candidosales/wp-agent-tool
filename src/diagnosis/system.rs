@@ -51,11 +51,7 @@ impl Diagnosis for SystemDiagnosis {
                  // Parse JSON from output string
                  match serde_json::from_str::<WpInfo>(&output) {
                      Ok(info) => {
-                         details.push(format!("PHP Version: {}", info.php_version));
-                         if info.php_version.starts_with("7.") || info.php_version.starts_with("5.") {
-                              overall_status = Status::Warning;
-                              details.push("Warning: PHP version is old. Recommend upgrading to 8.0+".to_string());
-                         }
+                         self.analyze_php_version(&info.php_version, &mut overall_status, &mut details);
                      },
                      Err(e) => {
                          details.push(format!("Failed to parse WP info: {}", e));
