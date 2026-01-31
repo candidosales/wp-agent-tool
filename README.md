@@ -6,6 +6,7 @@ WP Agent is a Rust-based CLI tool designed to diagnose and analyze WordPress ins
 
 - **WP-CLI Management**: Automatically checks for `wp-cli` and offers to install it locally if missing.
 - **Intelligent Root Detection**: Automatically locates your WordPress root directory or prompts if it cannot be found.
+- **Root Execution Support**: Seamlessly handles execution as root by switching to the site owner or using `--allow-root` automatically.
 - **Comprehensive Diagnosis**:
   - **Database**: Runs integrity checks (`wp db check`) and analyzes database size.
   - **Plugins**: Identifies plugins with available updates and lists inactive plugins.

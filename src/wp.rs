@@ -5,6 +5,7 @@ use console::style;
 use std::fs;
 use std::io::copy;
 use std::os::unix::fs::PermissionsExt;
+use std::os::unix::fs::MetadataExt;
 
 pub struct WpCli {
     executable_path: PathBuf,
@@ -105,10 +106,39 @@ impl WpCli {
     }
 
     pub fn run(&self, args: &[&str], cwd: &Path) -> anyhow::Result<String> {
-        let cmd = self.executable_path.to_string_lossy().to_string();
+        let mut cmd = self.executable_path.to_string_lossy().to_string();
+        let mut final_args: Vec<String> = args.iter().map(|s| s.to_string()).collect();
+
+        // Check for root execution using libc
+        let is_root = unsafe { libc::geteuid() == 0 };
+
+        if is_root {
+            let config_path = cwd.join("wp-config.php");
+            let target_path = if config_path.exists() { config_path.as_path() } else { cwd };
+
+            if let Ok(metadata) = std::fs::metadata(target_path) {
+                let file_uid = metadata.uid();
+                if file_uid == 0 {
+                    final_args.push("--allow-root".to_string());
+                } else {
+                    // Construct sudo command: sudo -u #<uid> -- <existing_cmd> <args>
+                    let uid_arg = format!("#{}", file_uid);
+                    let mut new_args = vec![
+                        "-u".to_string(),
+                        uid_arg,
+                        "--".to_string(),
+                        cmd,
+                    ];
+                    new_args.append(&mut final_args);
+                    
+                    cmd = "sudo".to_string();
+                    final_args = new_args;
+                }
+            }
+        }
 
         let output = Command::new(&cmd)
-            .args(args)
+            .args(&final_args)
             .current_dir(cwd)
             .output()?;
 
