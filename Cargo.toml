@@ -1,0 +1,17 @@
+[package]
+name = "wp-agent"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+console = "0.15"
+dialoguer = "0.11"
+sysinfo = "0.30"
+which = "6.0"
+reqwest = { version = "0.11", features = ["blocking"] }
+colored = "2.0"
