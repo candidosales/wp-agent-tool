@@ -27,6 +27,7 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
 - [Installation](./docs/installation.md)
 - [Basic Usage](./docs/basic-usage.md)
 - [Features](./docs/features.md)
+- [Creating Releases](./docs/creating-releases.md)
 
 ## Quickstart
 
