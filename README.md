@@ -34,7 +34,7 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
 Install WP Agent with a single command:
 
 ```bash
-curl -sSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
 ```
 
 Then navigate to your WordPress directory and run:

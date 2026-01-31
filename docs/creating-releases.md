@@ -80,7 +80,7 @@ Test the installation script:
 
 ```bash
 # Test the curl installer
-curl -sSf https://github.com/candidosales/wp-agent-tool/releases/download/v0.1.0/install.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/candidosales/wp-agent-tool/releases/download/v0.1.0/install.sh | sh
 
 # Verify installation
 wp-agent --version
@@ -240,7 +240,7 @@ git push origin v0.1.0
 # Visit: https://github.com/candidosales/wp-agent-tool/releases
 
 # 8. Test installation
-curl -sSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
 wp-agent --version
 ```
 

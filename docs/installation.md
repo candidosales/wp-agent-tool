@@ -5,7 +5,7 @@
 The fastest way to install WP Agent is using our installation script:
 
 ```bash
-curl -sSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
 ```
 
 Then restart your shell and run:
@@ -27,10 +27,10 @@ The installation script automatically:
 
 ```bash
 # Default installation
-curl -sSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | sh
 
 # Custom installation directory
-curl -sSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | INSTALL_DIR=/usr/local/bin sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/candidosales/wp-agent-tool/releases/latest/download/install.sh | INSTALL_DIR=/usr/local/bin sh
 ```
 
 Make sure `~/.local/bin` is in your PATH:
