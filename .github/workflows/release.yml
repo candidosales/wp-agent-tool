@@ -229,7 +229,14 @@ jobs:
                      print_step "Adding to PATH in $shell_config..."
                      echo "$path_cmd" > "$shell_config"
                      print_success "Added to PATH"
-                     print_info "Please restart your shell or run: source $shell_config"
+                     
+                     echo ""
+                     print_info "Get started with: ${GREEN}wp-agent --help${NC}"
+                     echo ""
+                     print_info "Restarting shell to apply changes..."
+                     sleep 1
+                     [ ! -t 0 ] && [ -e /dev/tty ] && exec < /dev/tty
+                     exec "$SHELL" -l
                   else 
                       if [ -f "$shell_config" ] && grep -q "$install_dir" "$shell_config"; then
                         print_success "PATH already configured in $shell_config"
@@ -239,7 +246,14 @@ jobs:
                         echo "# wp-agent" >> "$shell_config"
                         echo "$path_cmd" >> "$shell_config"
                         print_success "Added to PATH"
-                        print_info "Please restart your shell or run: source $shell_config"
+                        
+                        echo ""
+                        print_info "Get started with: ${GREEN}wp-agent --help${NC}"
+                        echo ""
+                        print_info "Restarting shell to apply changes..."
+                        sleep 1
+                        [ ! -t 0 ] && [ -e /dev/tty ] && exec < /dev/tty
+                        exec "$SHELL" -l
                       fi
                   fi
                 else
