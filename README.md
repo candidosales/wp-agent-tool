@@ -4,7 +4,7 @@ A Rust-based CLI tool for comprehensive WordPress diagnostics and maintenance.
 
 WP Agent automates common WordPress maintenance checks, helping you identify potential issues with your site setup quickly and efficiently.
 
-![demo](./docs/demo.png)
+![demo](./docs/demo.gif)
 
 ## Features
 
