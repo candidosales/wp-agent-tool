@@ -1,4 +1,4 @@
-# Installation Guide
+# Installation guide
 
 ## Quickstart
 
@@ -14,9 +14,9 @@ Then restart your shell and run:
 wp-agent --help
 ```
 
-## Installation Methods
+## Installation methods
 
-### Script Installation (Recommended)
+### Script installation (recommended)
 
 The installation script automatically:
 
@@ -40,7 +40,7 @@ Make sure `~/.local/bin` is in your PATH:
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-### Manual Binary Installation
+### Manual binary installation
 
 Download the appropriate binary for your platform from the [releases page](https://github.com/candidosales/wp-agent-tool/releases):
 
@@ -68,7 +68,7 @@ tar -xzf wp-agent-aarch64-apple-darwin.tar.gz
 sudo mv wp-agent /usr/local/bin/
 ```
 
-### Building from Source
+### Building from source
 
 If you have Rust installed, you can build from source:
 
@@ -84,17 +84,17 @@ cargo build --release
 sudo mv target/release/wp-agent /usr/local/bin/
 ```
 
-#### Cross-Compilation (macOS to Linux)
+#### Cross-compilation (macOS to Linux)
 
 If you're developing on macOS and need to deploy to a Linux server:
 
-1. **Add Linux Target**:
+1. **Add Linux target**:
 
    ```bash
    rustup target add x86_64-unknown-linux-musl
    ```
 
-2. **Install Linker** (using Homebrew):
+2. **Install linker** (using Homebrew):
 
    ```bash
    brew install messense/macos-cross-toolchains/x86_64-unknown-linux-musl
@@ -108,7 +108,7 @@ If you're developing on macOS and need to deploy to a Linux server:
 
    The static binary will be at `target/x86_64-unknown-linux-musl/release/wp-agent`.
 
-## Verifying Installation
+## Verifying installation
 
 After installation, verify it works:
 
@@ -117,8 +117,8 @@ wp-agent --version
 wp-agent --help
 ```
 
-## Next Steps
+## Next steps
 
-- Read the [Basic Usage Guide](./basic-usage.md)
-- Check out the [Features Documentation](./features.md)
+- Read the [Basic usage guide](./basic-usage.md)
+- Check out the [Features documentation](./features.md)
 - Learn about [Contributing](../CONTRIBUTING.md)

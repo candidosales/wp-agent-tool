@@ -1,4 +1,4 @@
-# Creating a Release
+# Creating a release
 
 This guide explains how to create and publish releases for WP Agent.
 
@@ -11,9 +11,9 @@ Before creating a release, ensure:
 - Version number is updated in `Cargo.toml` (if applicable)
 - CHANGELOG or release notes are prepared
 
-## Release Process
+## Release process
 
-### 1. Prepare the Release
+### 1. Prepare the release
 
 Review your changes and decide on the version number following [Semantic Versioning](https://semver.org/):
 
@@ -21,7 +21,7 @@ Review your changes and decide on the version number following [Semantic Version
 - **MINOR** version (v1.1.0): New functionality, backwards compatible
 - **PATCH** version (v1.0.1): Bug fixes, backwards compatible
 
-### 2. Create and Push a Git Tag
+### 2. Create and push a Git tag
 
 ```bash
 # Create a tag with the version number (must start with 'v')
@@ -33,7 +33,7 @@ git push origin v0.1.0
 
 > **Note**: The tag MUST start with `v` (e.g., `v0.1.0`, `v1.2.3`) to trigger the release workflow.
 
-### 3. Monitor the Release Workflow
+### 3. Monitor the release workflow
 
 Once you push the tag, GitHub Actions will automatically:
 
@@ -55,14 +55,14 @@ Once you push the tag, GitHub Actions will automatically:
    - Checksum files
    - Installer script
 
-### 4. Monitor Progress
+### 4. Monitor progress
 
 1. Go to the **Actions** tab in your GitHub repository
 2. Find the "Release" workflow run
 3. Monitor the build progress for each platform
 4. Ensure all jobs complete successfully
 
-### 5. Verify the Release
+### 5. Verify the release
 
 Once the workflow completes:
 
@@ -74,7 +74,7 @@ Once the workflow completes:
    - Checksum files
    - `install.sh` script
 
-### 6. Test the Release
+### 6. Test the release
 
 Test the installation script:
 
@@ -88,7 +88,7 @@ wp-agent --version
 
 Test manual downloads for different platforms if possible.
 
-## Creating a Pre-release
+## Creating a pre-release
 
 For testing or beta versions, you can create a pre-release:
 
@@ -102,7 +102,7 @@ After the workflow completes, edit the release on GitHub and mark it as a "Pre-r
 
 ## Troubleshooting
 
-### Build Failures
+### Build failures
 
 If a build fails for a specific platform:
 
@@ -112,7 +112,7 @@ If a build fails for a specific platform:
    - Platform-specific code issues
    - Missing system libraries
 
-### Tag Already Exists
+### Tag already exists
 
 If you need to recreate a tag:
 
@@ -130,7 +130,7 @@ git push origin v0.1.0
 
 > **Warning**: Deleting and recreating tags is not recommended for published releases.
 
-### Release Not Created
+### Release not created
 
 If the workflow runs but doesn't create a release:
 
@@ -138,11 +138,11 @@ If the workflow runs but doesn't create a release:
 2. Verify the workflow has `contents: write` permissions
 3. Check the workflow logs for errors in the release step
 
-## Manual Release (Advanced)
+## Manual release (Advanced)
 
 If you need to create a release manually:
 
-### Build Locally
+### Build locally
 
 ```bash
 # Build for your current platform
@@ -162,7 +162,7 @@ rustup target add x86_64-pc-windows-msvc
 cargo build --release --target x86_64-unknown-linux-gnu
 ```
 
-### Create Release on GitHub
+### Create release on GitHub
 
 1. Go to **Releases** → **Draft a new release**
 2. Choose or create a tag
@@ -170,9 +170,9 @@ cargo build --release --target x86_64-unknown-linux-gnu
 4. Upload the built binaries
 5. Publish the release
 
-## Best Practices
+## Best practices
 
-### Before Releasing
+### Before releasing
 
 - [ ] Run all tests: `cargo test`
 - [ ] Check for linting issues: `cargo clippy`
@@ -180,14 +180,14 @@ cargo build --release --target x86_64-unknown-linux-gnu
 - [ ] Update documentation
 - [ ] Review and update CHANGELOG
 
-### Version Numbering
+### Version numbering
 
 - Use semantic versioning (MAJOR.MINOR.PATCH)
 - Start with `v0.1.0` for initial releases
 - Increment appropriately based on changes
 - Use pre-release tags for testing (e.g., `v1.0.0-beta.1`)
 
-### Release Notes
+### Release notes
 
 The GitHub Actions workflow automatically generates release notes from:
 
@@ -200,7 +200,7 @@ To improve auto-generated notes:
 - Use conventional commit messages
 - Group related changes in single PRs
 
-### Testing Releases
+### Testing releases
 
 Before announcing a release:
 
@@ -209,8 +209,7 @@ Before announcing a release:
 - Check that all download links are accessible
 - Review the auto-generated release notes for clarity
 
-## Example Workflow
-
+## Example workflow
 Here's a complete example of creating a release:
 
 ```bash
@@ -244,7 +243,7 @@ curl --proto '=https' --tlsv1.2 -LsSf https://github.com/candidosales/wp-agent-t
 wp-agent --version
 ```
 
-## Related Documentation
+## Related documentation
 
 - [GitHub Actions Workflow](../.github/workflows/release.yml)
 - [Installation Guide](./installation.md)

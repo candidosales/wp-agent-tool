@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to WP Agent! We welcome all contributions, from bug reports and feature requests to code changes and documentation improvements.
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
@@ -10,7 +10,7 @@ Thank you for your interest in contributing to WP Agent! We welcome all contribu
 - **WP-CLI**: While the tool can install a local copy, having `wp-cli` installed globally is helpful for testing.
 - **Git**: For version control.
 
-### Setting Up the Environment
+### Setting up the environment
 
 1.  **Clone the repository**:
 
@@ -30,24 +30,24 @@ Thank you for your interest in contributing to WP Agent! We welcome all contribu
     cargo run
     ```
 
-## Development Workflow
+## Development workflow
 
-1.  **Create a Branch**: Always create a new branch for your changes.
+1.  **Create a branch**: Always create a new branch for your changes.
 
     ```bash
     git checkout -b feature/my-new-feature
     ```
 
-2.  **Make Changes**: Implement your feature or fix.
+2.  **Make changes**: Implement your feature or fix.
 
-3.  **Run Checks**: Ensure your code compiles and passes checks.
+3.  **Run checks**: Ensure your code compiles and passes checks.
 
     ```bash
     cargo check
     cargo test
     ```
 
-4.  **Format Code**: We use `rustfmt` to keep the code consistent.
+4.  **Format code**: We use `rustfmt` to keep the code consistent.
 
     ```bash
     cargo fmt
@@ -55,9 +55,9 @@ Thank you for your interest in contributing to WP Agent! We welcome all contribu
 
 5.  **Commit**: Use descriptive commit messages.
 
-6.  **Push and Open a PR**: Push your branch to GitHub and open a Pull Request.
+6.  **Push and open a PR**: Push your branch to GitHub and open a Pull Request.
 
-## Project Structure
+## Project structure
 
 - `src/main.rs`: Entry point. Initializes the CLI and runs the diagnosis modules.
 - `src/wp.rs`: Wrapper for executing `wp-cli` commands.
@@ -66,7 +66,7 @@ Thank you for your interest in contributing to WP Agent! We welcome all contribu
   - `mod.rs`: Registers the diagnosis modules.
   - `database.rs`, `plugins.rs`, etc.: Individual modules.
 
-## How to Add a New Diagnosis Module
+## How to add a new diagnosis module
 
 1.  **Create the Module File**:
     Create a new file in `src/diagnosis/` (e.g., `my_new_check.rs`).
@@ -95,7 +95,7 @@ Thank you for your interest in contributing to WP Agent! We welcome all contribu
     }
     ```
 
-3.  **Register the Module**:
+3.  **Register the module**:
     - Add `pub mod my_new_check;` to `src/diagnosis/mod.rs`.
     - In `src/main.rs`, add the module to the `modules` vector:
       ```rust

@@ -1,10 +1,19 @@
 # WP Agent
 
+<p align="center">
+ <picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/logo.png">
+  <img alt="Text changing depending on mode. Light: 'So light!' Dark: 'So dark!'" src="./docs/logo.png">
+</picture>
+</p>
+
 A Rust-based CLI tool for comprehensive WordPress diagnostics and maintenance.
 
 WP Agent automates common WordPress maintenance checks, helping you identify potential issues with your site setup quickly and efficiently.
 
-![demo](./docs/demo.gif)
+<p align="center">
+  <img src="./docs/demo.gif" alt="animated" width="80%" />
+</p>
 
 ## Features
 
@@ -59,7 +68,7 @@ For more installation options, see the [Installation Guide](./docs/installation.
 
 ## Development
 
-### Project Structure
+### Project structure
 
 ```
 src/
@@ -77,7 +86,7 @@ src/
     └── maintenance.rs
 ```
 
-### Building from Source
+### Building from source
 
 ```bash
 # Clone the repository

@@ -1,6 +1,6 @@
-# Basic Usage Guide
+# Basic usage guide
 
-## Quick Start
+## Quick start
 
 Navigate to your WordPress project directory and run:
 
@@ -15,7 +15,7 @@ WP Agent will automatically:
 3. Run comprehensive diagnostics
 4. Display a summary report
 
-## Command Line Options
+## Command line options
 
 ```bash
 # Display help
@@ -25,7 +25,7 @@ wp-agent --help
 wp-agent --version
 ```
 
-## Understanding the Report
+## Understanding the report
 
 WP Agent runs several diagnostic modules and displays results in a color-coded table:
 
@@ -33,7 +33,7 @@ WP Agent runs several diagnostic modules and displays results in a color-coded t
 - 🟡 **WARNING**: Potential issues that should be reviewed
 - 🔴 **ERROR**: Critical issues that need immediate attention
 
-### Diagnostic Modules
+### Diagnostic modules
 
 #### Database
 
@@ -84,7 +84,7 @@ WP Agent runs several diagnostic modules and displays results in a color-coded t
 
 WP Agent automatically handles WP-CLI installation and configuration:
 
-### Local Installation
+### Local installation
 
 If WP-CLI is not found in your system PATH, WP Agent will:
 
@@ -92,7 +92,7 @@ If WP-CLI is not found in your system PATH, WP Agent will:
 2. Use the local copy for all operations
 3. Store it in your project root
 
-### Root Execution
+### Root execution
 
 When running as root (common on VPS environments), WP Agent will:
 
@@ -100,7 +100,7 @@ When running as root (common on VPS environments), WP Agent will:
 2. Switch to that user for WP-CLI commands
 3. Fall back to `--allow-root` if needed
 
-## Example Workflow
+## Example workflow
 
 ```bash
 # Navigate to your WordPress site
@@ -117,21 +117,21 @@ wp-agent
 
 ## Troubleshooting
 
-### WP-CLI Not Found
+### WP-CLI not found
 
 If WP Agent can't find WP-CLI:
 
 - Accept the prompt to install it locally, or
 - Install WP-CLI globally: https://wp-cli.org/
 
-### WordPress Root Not Detected
+### WordPress root not detected
 
 If WP Agent can't find `wp-config.php`:
 
 - Make sure you're in or near your WordPress directory
 - Check that `wp-config.php` exists and is readable
 
-### Permission Issues
+### Permission issues
 
 If you encounter permission errors:
 
@@ -139,8 +139,8 @@ If you encounter permission errors:
 - On servers, you may need to run as the web server user
 - WP Agent will handle root execution automatically
 
-## Next Steps
+## Next steps
 
-- Review the [Features Documentation](./features.md)
-- Check the [Installation Guide](./installation.md)
+- Review the [Features documentation](./features.md)
+- Check the [Installation guide](./installation.md)
 - Learn about [Contributing](../CONTRIBUTING.md)
