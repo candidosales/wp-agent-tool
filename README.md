@@ -17,10 +17,10 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
 
 ## Features
 
-- **Automatic WP-CLI Management**: Detects and installs WP-CLI if needed
-- **Smart Root Detection**: Automatically finds your WordPress installation
-- **Root Execution Support**: Handles execution as root seamlessly
-- **Comprehensive Diagnostics**:
+- **Automatic WP-CLI management**: Detects and installs WP-CLI if needed
+- **Smart root detection**: Automatically finds your WordPress installation
+- **Root execution support**: Handles execution as root seamlessly
+- **Comprehensive diagnostics**:
   - Database integrity and optimization checks
   - Plugin updates and security audits
   - PHP version and system resource monitoring
@@ -28,7 +28,7 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
   - Security checksums and debug mode detection
   - Performance analysis (object cache, autoloaded options, cron)
   - Maintenance checks (revisions, transients, debug logs)
-- **Color-Coded Reports**: Easy-to-read summary with OK/WARNING/ERROR indicators
+- **Color-coded reports**: Easy-to-read summary with OK/WARNING/ERROR indicators
 
 ## Documentation
 
