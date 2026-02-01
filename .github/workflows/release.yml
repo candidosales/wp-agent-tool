@@ -196,11 +196,56 @@ jobs:
                 print_success "$install_dir is already in your PATH"
                 ;;
               *)
-                print_info "Add $install_dir to your PATH:"
-                echo "    export PATH=\"$install_dir:\$PATH\""
-                echo ""
-                print_info "Or add to your shell config (~/.bashrc, ~/.zshrc, etc.):"
-                echo "    echo 'export PATH=\"$install_dir:\$PATH\"' >> ~/.zshrc"
+                # Add to PATH automatically
+                local shell_config=""
+                local shell_name=$(basename "$SHELL")
+                local path_cmd="export PATH=\"$install_dir:\$PATH\""
+
+                case "$shell_name" in
+                  zsh)
+                    shell_config="${ZDOTDIR:-$HOME}/.zshrc"
+                    ;;
+                  bash)
+                    if [ -f "$HOME/.bashrc" ]; then
+                      shell_config="$HOME/.bashrc"
+                    elif [ -f "$HOME/.bash_profile" ]; then
+                      shell_config="$HOME/.bash_profile"
+                    else
+                      shell_config="$HOME/.bashrc"
+                    fi
+                    ;;
+                  fish)
+                     shell_config="$HOME/.config/fish/conf.d/wp-agent.fish"
+                     path_cmd="fish_add_path $install_dir"
+                     mkdir -p "$(dirname "$shell_config")"
+                    ;;
+                  *)
+                    shell_config="$HOME/.profile"
+                    ;;
+                esac
+
+                if [ -n "$shell_config" ]; then
+                  if [ "$shell_name" = "fish" ]; then
+                     print_step "Adding to PATH in $shell_config..."
+                     echo "$path_cmd" > "$shell_config"
+                     print_success "Added to PATH"
+                     print_info "Please restart your shell or run: source $shell_config"
+                  else 
+                      if [ -f "$shell_config" ] && grep -q "$install_dir" "$shell_config"; then
+                        print_success "PATH already configured in $shell_config"
+                      else
+                        print_step "Adding to PATH in $shell_config..."
+                        echo "" >> "$shell_config"
+                        echo "# wp-agent" >> "$shell_config"
+                        echo "$path_cmd" >> "$shell_config"
+                        print_success "Added to PATH"
+                        print_info "Please restart your shell or run: source $shell_config"
+                      fi
+                  fi
+                else
+                   print_info "Could not detect shell config file. Please add manually:"
+                   echo "    export PATH=\"$install_dir:\$PATH\""
+                fi
                 ;;
             esac
             
