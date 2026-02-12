@@ -13,6 +13,6 @@ console = "0.16"
 dialoguer = "0.12"
 sysinfo = "0.30"
 which = "8.0"
-reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
 colored = "3.1"
 libc = "0.2"
