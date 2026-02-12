@@ -11,7 +11,7 @@ thiserror = "2.0"
 anyhow = "1.0"
 console = "0.16"
 dialoguer = "0.12"
-sysinfo = "0.30"
+sysinfo = "0.38"
 which = "8.0"
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls"] }
 colored = "3.1"
