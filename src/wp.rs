@@ -112,6 +112,59 @@ impl WpCli {
         }
     }
 
+    /// Parses DB_NAME/DB_USER/DB_PASSWORD/DB_HOST straight out of wp-config.php.
+    /// Used as a fallback when wp-cli itself is broken (e.g. a fatal error in
+    /// WordPress core/a plugin makes every `wp` invocation fail, as seen when
+    /// a core bug crashed wp-cli entirely on a live site).
+    pub fn db_config(&self, root: &Path) -> anyhow::Result<(String, String, String, String)> {
+        let config_path = root.join("wp-config.php");
+        let contents = fs::read_to_string(&config_path)?;
+
+        let extract = |key: &str| -> anyhow::Result<String> {
+            let needle = format!("define('{}'", key);
+            let needle_dq = format!("define(\"{}\"", key);
+            let line = contents
+                .lines()
+                .find(|l| l.contains(&needle) || l.contains(&needle_dq))
+                .ok_or_else(|| anyhow::anyhow!("{} not found in wp-config.php", key))?;
+
+            let mut parts = line.splitn(3, ['\'', '"']);
+            parts.next(); // define( prefix up to first quote
+            parts.next(); // the key itself
+            let rest = parts.next().unwrap_or("");
+            let mut rest_parts = rest.splitn(3, ['\'', '"']);
+            rest_parts.next(); // separator/comma up to opening quote of value
+            let value = rest_parts.next().unwrap_or("").to_string();
+            Ok(value)
+        };
+
+        let name = extract("DB_NAME")?;
+        let user = extract("DB_USER")?;
+        let pass = extract("DB_PASSWORD").unwrap_or_default();
+        let host = extract("DB_HOST").unwrap_or_else(|_| "localhost".to_string());
+
+        Ok((name, user, pass, host))
+    }
+
+    /// Runs a raw SQL query directly via the `mysql` client, bypassing wp-cli
+    /// entirely. Only use for read-only queries as a fallback when `run()`
+    /// fails because wp-cli itself is broken, not as a general replacement —
+    /// writes made this way skip WordPress's own cache invalidation.
+    pub fn raw_query(&self, root: &Path, query: &str) -> anyhow::Result<String> {
+        let (name, user, pass, host) = self.db_config(root)?;
+
+        let output = Command::new("mysql")
+            .args(["-h", &host, "-u", &user, &format!("-p{}", pass), "-N", "-e", query, &name])
+            .output()?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            return Err(anyhow::anyhow!("raw mysql query failed: {}", stderr));
+        }
+
+        Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    }
+
     pub fn run(&self, args: &[&str], cwd: &Path) -> anyhow::Result<String> {
         let mut cmd = self.executable_path.to_string_lossy().to_string();
         let mut final_args: Vec<String> = args.iter().map(|s| s.to_string()).collect();

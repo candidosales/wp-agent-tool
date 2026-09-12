@@ -14,6 +14,18 @@ struct Plugin {
 
 pub struct PluginDiagnosis;
 
+/// (category, keywords to match against the plugin slug). Only active plugins
+/// are checked; more than one match per category is flagged, since redundant
+/// plugins in the same category (e.g. two security scanners, three image
+/// optimizers) each add per-request overhead without added benefit.
+const REDUNDANCY_CATEGORIES: &[(&str, &[&str])] = &[
+    ("security scanner", &["sucuri", "wordfence", "ithemes-security", "better-wp-security", "all-in-one-wp-security", "malcare", "shield-security"]),
+    ("image optimizer", &["ewww-image-optimizer", "resmushit", "smush", "shortpixel", "imagify", "optimole", "tiny-compress-images"]),
+    ("caching", &["litespeed-cache", "w3-total-cache", "wp-super-cache", "wp-rocket", "wp-fastest-cache", "redis-cache", "cache-enabler"]),
+    ("seo", &["wordpress-seo", "all-in-one-seo-pack", "seo-by-rank-math", "the-seo-framework"]),
+    ("backup", &["updraftplus", "backwpup", "duplicator", "all-in-one-wp-migration"]),
+];
+
 impl Diagnosis for PluginDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
         println!("  Running Plugin Diagnosis...");
@@ -53,13 +65,37 @@ impl PluginDiagnosis {
                   details.push(format!(" - {}", p.name));
              }
         }
-        
+
+        self.analyze_redundancy(&plugins, &mut overall_status, &mut details);
+
         Ok(DiagnosisReport {
             module: "Plugins".to_string(),
             status: overall_status,
             message: format!("Analyzed {} plugins.", plugins.len()),
             details,
         })
+    }
+
+    fn analyze_redundancy(&self, plugins: &[Plugin], status: &mut Status, details: &mut Vec<String>) {
+        let active: Vec<&Plugin> = plugins.iter().filter(|p| p.status == "active").collect();
+
+        for (category, keywords) in REDUNDANCY_CATEGORIES {
+            let matches: Vec<&str> = active
+                .iter()
+                .filter(|p| keywords.iter().any(|k| p.name.contains(k)))
+                .map(|p| p.name.as_str())
+                .collect();
+
+            if matches.len() > 1 {
+                *status = Status::Warning;
+                details.push(format!(
+                    "Warning: {} active plugins overlap in the '{}' category ({}) — running more than one adds redundant per-request overhead.",
+                    matches.len(),
+                    category,
+                    matches.join(", ")
+                ));
+            }
+        }
     }
 }
 
@@ -95,6 +131,35 @@ mod tests {
         
         matches!(report.status, Status::Ok);
         assert!(report.details.iter().any(|d| d.contains("All plugins are up to date")));
+        Ok(())
+    }
+
+    #[test]
+    fn test_analyze_plugins_detects_redundant_security_scanners() -> Result<()> {
+        let json = r#"[
+            {"name": "sucuri-scanner", "status": "active", "update": "none", "version": "1.0"},
+            {"name": "wordfence", "status": "active", "update": "none", "version": "7.0"}
+        ]"#;
+
+        let diagnosis = PluginDiagnosis;
+        let report = diagnosis.analyze_plugins(json)?;
+
+        assert_eq!(report.status, Status::Warning);
+        assert!(report.details.iter().any(|d| d.contains("security scanner") && d.contains("sucuri-scanner") && d.contains("wordfence")));
+        Ok(())
+    }
+
+    #[test]
+    fn test_analyze_plugins_no_redundancy_when_single_per_category() -> Result<()> {
+        let json = r#"[
+            {"name": "sucuri-scanner", "status": "active", "update": "none", "version": "1.0"},
+            {"name": "akismet", "status": "active", "update": "none", "version": "5.0"}
+        ]"#;
+
+        let diagnosis = PluginDiagnosis;
+        let report = diagnosis.analyze_plugins(json)?;
+
+        assert_eq!(report.status, Status::Ok);
         Ok(())
     }
 }
