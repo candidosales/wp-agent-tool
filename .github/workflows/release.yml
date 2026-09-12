@@ -48,7 +48,7 @@ jobs:
           shasum -a 256 wp-agent-${{ matrix.target }}.tar.gz > wp-agent-${{ matrix.target }}.tar.gz.sha256
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: wp-agent-${{ matrix.target }}
           path: |
