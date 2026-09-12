@@ -74,6 +74,13 @@ WP Agent provides comprehensive WordPress diagnostics and maintenance checks.
 
 - **Fatal error / warning scan**: Tails the PHP/web-server error log (LiteSpeed, Apache, Nginx, or PHP-FPM) and reports fatal errors and warnings from the recent window
 - **Offender ranking**: Attributes errors to the plugin path they came from, so the noisiest plugin surfaces first
+- **Noisy-plugin flagging**: Separately calls out plugins that log a high volume of warnings with zero fatals — safe to deprioritize, but worth reporting upstream
+
+### 🕵️ Scanner / bot traffic
+
+- **Access log analysis**: Tails the web-server access log (LiteSpeed, Apache, or Nginx) and flags IPs with bursty 404s or hits on known-malicious paths (`wp-config.php~`, `/.env`, `/actuator/`, `/graphql`, `.zip`/`.sql`/`.bak`, etc.)
+- **fail2ban awareness**: Detects whether `fail2ban` is installed and active, escalating to ERROR when scanner traffic is present but unmitigated
+- **Load-vs-traffic correlation**: Compares CPU load average against the request volume in the scanned window, distinguishing traffic-driven load from a runaway process/plugin bug
 
 ### 🔨 Maintenance
 
@@ -114,6 +121,7 @@ Each module provides:
 │ Security    │ ✗ ERROR  │ Debug mode enabled     │
 │ Performance │ ⚠ WARN   │ No object cache        │
 │ Error Log   │ ✗ ERROR  │ 2 fatal errors found   │
+│ Scanner     │ ✗ ERROR  │ Scanner IPs, no f2b    │
 │ Maintenance │ ✓ OK     │ Up to date             │
 ╰─────────────┴──────────┴────────────────────────╯
 ```

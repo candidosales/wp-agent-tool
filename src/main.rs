@@ -16,6 +16,7 @@ use diagnosis::security::SecurityDiagnosis;
 use diagnosis::performance::PerformanceDiagnosis;
 use diagnosis::maintenance::MaintenanceDiagnosis;
 use diagnosis::errorlog::ErrorLogDiagnosis;
+use diagnosis::scanner::ScannerDiagnosis;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
@@ -56,6 +57,7 @@ fn main() -> anyhow::Result<()> {
         Box::new(PerformanceDiagnosis),
         Box::new(MaintenanceDiagnosis),
         Box::new(ErrorLogDiagnosis),
+        Box::new(ScannerDiagnosis),
     ];
     
     let mut reports = Vec::new();

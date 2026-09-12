@@ -29,3 +29,4 @@ pub mod security;
 pub mod performance;
 pub mod maintenance;
 pub mod errorlog;
+pub mod scanner;
