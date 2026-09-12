@@ -2,6 +2,7 @@ use crate::diagnosis::{Diagnosis, DiagnosisReport, Status};
 use crate::wp::WpCli;
 use std::path::Path;
 use anyhow::Result;
+use sysinfo::System;
 
 pub struct PerformanceDiagnosis;
 
@@ -42,6 +43,32 @@ impl Diagnosis for PerformanceDiagnosis {
         // 4. Object Cache
         println!("    > Checking object cache...");
         self.analyze_object_cache(wp, root, &mut details);
+
+        // 5. Divi responsive-image CPU risk on constrained hardware
+        println!("    > Checking image processing CPU risk...");
+        let active_theme = wp
+            .run(&["theme", "list", "--status=active", "--field=name", "--format=csv"], root)
+            .map(|s| s.lines().last().unwrap_or("").trim().to_string())
+            .unwrap_or_default();
+
+        if !active_theme.is_empty() {
+            let mut sys = System::new_all();
+            sys.refresh_all();
+            let cpu_count = sys.cpus().len();
+            let mem_mb = sys.total_memory() as f64 / 1024.0 / 1024.0;
+            let swap_mb = sys.total_swap() as f64 / 1024.0 / 1024.0;
+            let mitigation_present = Self::mu_plugin_mitigation_present(root);
+
+            self.analyze_image_processing_risk(
+                &active_theme,
+                cpu_count,
+                mem_mb,
+                swap_mb,
+                mitigation_present,
+                &mut overall_status,
+                &mut details,
+            );
+        }
 
         Ok(DiagnosisReport {
             module: "Performance".to_string(),
@@ -209,6 +236,76 @@ impl PerformanceDiagnosis {
             .map(|o| o.status.success())
             .unwrap_or(false)
     }
+
+    fn mu_plugin_mitigation_present(root: &Path) -> bool {
+        let mu_dir = root.join("wp-content/mu-plugins");
+        let entries = match std::fs::read_dir(&mu_dir) {
+            Ok(e) => e,
+            Err(_) => return false,
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("php") {
+                continue;
+            }
+            if let Ok(contents) = std::fs::read_to_string(&path) {
+                if contents.contains("et-pb-image--responsive--") {
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
+    fn analyze_image_processing_risk(
+        &self,
+        active_theme: &str,
+        cpu_count: usize,
+        mem_mb: f64,
+        swap_mb: f64,
+        mitigation_present: bool,
+        status: &mut Status,
+        details: &mut Vec<String>,
+    ) {
+        if !active_theme.to_lowercase().contains("divi") {
+            return;
+        }
+
+        details.push(format!(
+            "Active theme '{}' registers responsive image sizes per breakpoint; every upload triggers 10-15+ synchronous resize operations.",
+            active_theme
+        ));
+
+        let low_cpu = cpu_count <= 1;
+        let low_mem = mem_mb < 1536.0;
+
+        if !low_cpu && !low_mem {
+            details.push("Server resources appear sufficient to absorb Divi's responsive image generation.".to_string());
+            return;
+        }
+
+        details.push(format!(
+            "Server resources are constrained ({} vCPU, {:.0}MB RAM) — image uploads can saturate CPU.",
+            cpu_count, mem_mb
+        ));
+
+        if mitigation_present {
+            details.push("Mitigation detected: a mu-plugin already strips Divi's responsive image sizes.".to_string());
+        } else {
+            *status = Status::Warning;
+            details.push(
+                "Recommendation: add wp-content/mu-plugins/reduce-image-sizes.php filtering out \
+                 'et-pb-image--responsive--*' sizes via the intermediate_image_sizes_advanced filter, \
+                 and disable big_image_size_threshold.".to_string(),
+            );
+        }
+
+        if swap_mb < 1.0 {
+            *status = Status::Warning;
+            details.push("No swap configured — combined with low RAM this raises the risk of thrashing during uploads. Consider adding a 1GB swapfile.".to_string());
+        }
+    }
 }
 
 #[cfg(test)]
@@ -246,5 +343,54 @@ mod tests {
         assert_eq!(PerformanceDiagnosis::parse_php_size_mb("256M"), Some(256.0));
         assert_eq!(PerformanceDiagnosis::parse_php_size_mb("1G"), Some(1024.0));
         assert_eq!(PerformanceDiagnosis::parse_php_size_mb("-1"), None);
+    }
+
+    #[test]
+    fn test_analyze_image_processing_risk_divi_low_resources_no_mitigation() {
+        let diagnosis = PerformanceDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+
+        diagnosis.analyze_image_processing_risk("Divi", 1, 969.0, 0.0, false, &mut status, &mut details);
+
+        assert_eq!(status, Status::Warning);
+        assert!(details.iter().any(|d| d.contains("mu-plugins/reduce-image-sizes.php")));
+        assert!(details.iter().any(|d| d.contains("No swap configured")));
+    }
+
+    #[test]
+    fn test_analyze_image_processing_risk_divi_low_resources_with_mitigation() {
+        let diagnosis = PerformanceDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+
+        diagnosis.analyze_image_processing_risk("Divi", 1, 969.0, 1024.0, true, &mut status, &mut details);
+
+        assert_eq!(status, Status::Ok);
+        assert!(details.iter().any(|d| d.contains("Mitigation detected")));
+    }
+
+    #[test]
+    fn test_analyze_image_processing_risk_divi_sufficient_resources() {
+        let diagnosis = PerformanceDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+
+        diagnosis.analyze_image_processing_risk("Divi", 4, 8192.0, 4096.0, false, &mut status, &mut details);
+
+        assert_eq!(status, Status::Ok);
+        assert!(details.iter().any(|d| d.contains("appear sufficient")));
+    }
+
+    #[test]
+    fn test_analyze_image_processing_risk_non_divi_theme_skipped() {
+        let diagnosis = PerformanceDiagnosis;
+        let mut status = Status::Ok;
+        let mut details = Vec::new();
+
+        diagnosis.analyze_image_processing_risk("Astra", 1, 512.0, 0.0, false, &mut status, &mut details);
+
+        assert_eq!(status, Status::Ok);
+        assert!(details.is_empty());
     }
 }
