@@ -37,6 +37,7 @@ WP Agent provides comprehensive WordPress diagnostics and maintenance checks.
 - **Inactive plugins**: Identifies installed but inactive plugins
 - **Version information**: Shows current and available versions
 - **Security alerts**: Flags plugins with known vulnerabilities (when available)
+- **Redundancy detection**: Flags overlapping active plugins in the same category (security scanners, image optimizers, caching, SEO, backups) — running more than one adds per-request overhead for no benefit
 
 ### 💻 System
 
@@ -62,11 +63,17 @@ WP Agent provides comprehensive WordPress diagnostics and maintenance checks.
 
 ### ⚡ Performance
 
-- **Autoloaded options**: Analyzes size of autoloaded data
-- **Cron events**: Reviews scheduled tasks and their frequency
-- **Object cache**: Checks if object caching is enabled
+- **Autoloaded options**: Analyzes size of autoloaded data (falls back to a raw DB query if wp-cli fails)
+- **Cron events**: Checks whether `DISABLE_WP_CRON` is set and, if so, verifies a system crontab/`/etc/cron.d` entry actually hits `wp-cron.php` — not just that a cron command ran
+- **Object cache**: Detects Redis, W3 Total Cache, or LiteSpeed Cache, plus an `object-cache.php` drop-in or a running Memcached process
+- **PHP limits**: Checks `memory_limit` and `max_execution_time` against the number of active plugins, warning when they're too low for the site's footprint
 - **Database queries**: Identifies slow or problematic queries
 - **Transients**: Reports on transient usage and cleanup
+
+### 📄 Error log
+
+- **Fatal error / warning scan**: Tails the PHP/web-server error log (LiteSpeed, Apache, Nginx, or PHP-FPM) and reports fatal errors and warnings from the recent window
+- **Offender ranking**: Attributes errors to the plugin path they came from, so the noisiest plugin surfaces first
 
 ### 🔨 Maintenance
 
@@ -106,6 +113,7 @@ Each module provides:
 │ Network     │ ✓ OK     │ All connections OK     │
 │ Security    │ ✗ ERROR  │ Debug mode enabled     │
 │ Performance │ ⚠ WARN   │ No object cache        │
+│ Error Log   │ ✗ ERROR  │ 2 fatal errors found   │
 │ Maintenance │ ✓ OK     │ Up to date             │
 ╰─────────────┴──────────┴────────────────────────╯
 ```

@@ -15,6 +15,7 @@ use diagnosis::network::NetworkDiagnosis;
 use diagnosis::security::SecurityDiagnosis;
 use diagnosis::performance::PerformanceDiagnosis;
 use diagnosis::maintenance::MaintenanceDiagnosis;
+use diagnosis::errorlog::ErrorLogDiagnosis;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
@@ -54,6 +55,7 @@ fn main() -> anyhow::Result<()> {
         Box::new(SecurityDiagnosis),
         Box::new(PerformanceDiagnosis),
         Box::new(MaintenanceDiagnosis),
+        Box::new(ErrorLogDiagnosis),
     ];
     
     let mut reports = Vec::new();
