@@ -27,7 +27,8 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
   - Network connectivity verification
   - Security checksums and debug mode detection
   - Performance analysis (object cache incl. LiteSpeed/Memcached, autoloaded options, wp-cron vs. system cron, PHP memory_limit/max_execution_time, image-upload CPU risk on constrained hardware)
-  - Error log scanning for PHP fatal errors and warnings, ranked by offending plugin
+  - Error log scanning for PHP fatal errors and warnings, ranked by offending plugin, plus noisy-non-fatal-plugin flagging
+  - Scanner/bot traffic detection from the access log (bursty 404s, known-malicious-path hits), fail2ban presence check, and CPU load-vs-traffic correlation
   - Maintenance checks (revisions, transients, debug logs)
 - **Resilient to a broken wp-cli**: falls back to a direct database query when wp-cli itself fails
 - **Color-coded reports**: Easy-to-read summary with OK/WARNING/ERROR indicators
@@ -86,7 +87,8 @@ src/
     ├── security.rs
     ├── performance.rs
     ├── maintenance.rs
-    └── errorlog.rs
+    ├── errorlog.rs
+    └── scanner.rs
 ```
 
 ### Building from source

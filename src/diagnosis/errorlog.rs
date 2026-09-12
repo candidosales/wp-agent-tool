@@ -14,6 +14,7 @@ const CANDIDATE_LOG_PATHS: &[&str] = &[
 ];
 
 const TAIL_LINES: usize = 2000;
+const NOISY_WARNING_THRESHOLD: usize = 200;
 
 pub struct ErrorLogDiagnosis;
 
@@ -98,6 +99,7 @@ impl ErrorLogDiagnosis {
         let mut fatal_count = 0usize;
         let mut warning_count = 0usize;
         let mut per_plugin: HashMap<String, usize> = HashMap::new();
+        let mut per_plugin_split: HashMap<String, (usize, usize)> = HashMap::new();
 
         for line in log_tail.lines() {
             let is_fatal = line.contains("PHP Fatal error") || line.contains("PHP Parse error");
@@ -113,7 +115,13 @@ impl ErrorLogDiagnosis {
             }
 
             if let Some(plugin) = Self::extract_plugin(line) {
-                *per_plugin.entry(plugin).or_insert(0) += 1;
+                *per_plugin.entry(plugin.clone()).or_insert(0) += 1;
+                let split = per_plugin_split.entry(plugin).or_insert((0, 0));
+                if is_fatal {
+                    split.0 += 1;
+                } else {
+                    split.1 += 1;
+                }
             }
         }
 
@@ -137,6 +145,18 @@ impl ErrorLogDiagnosis {
         offenders.sort_by(|a, b| b.1.cmp(a.1));
         for (plugin, count) in offenders.into_iter().take(5) {
             details.push(format!(" - {}: {} occurrence(s)", plugin, count));
+        }
+
+        let mut noisy: Vec<(&String, &(usize, usize))> = per_plugin_split
+            .iter()
+            .filter(|(_, (fatal, warning))| *fatal == 0 && *warning >= NOISY_WARNING_THRESHOLD)
+            .collect();
+        noisy.sort_by(|a, b| b.1 .1.cmp(&a.1 .1));
+        for (plugin, (_, warning)) in noisy {
+            details.push(format!(
+                " - NOISY (non-fatal): {} produced {} warning(s) with zero fatals — safe to deprioritize, but worth reporting upstream.",
+                plugin, warning
+            ));
         }
     }
 
