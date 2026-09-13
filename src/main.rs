@@ -17,6 +17,7 @@ use diagnosis::performance::PerformanceDiagnosis;
 use diagnosis::maintenance::MaintenanceDiagnosis;
 use diagnosis::errorlog::ErrorLogDiagnosis;
 use diagnosis::scanner::ScannerDiagnosis;
+use diagnosis::wpcli_health::WpCliHealthDiagnosis;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
@@ -49,6 +50,7 @@ fn main() -> anyhow::Result<()> {
     println!("\nRunning diagnoses...");
     
     let modules: Vec<Box<dyn Diagnosis>> = vec![
+        Box::new(WpCliHealthDiagnosis),
         Box::new(DatabaseDiagnosis),
         Box::new(PluginDiagnosis),
         Box::new(SystemDiagnosis),

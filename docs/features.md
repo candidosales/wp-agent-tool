@@ -24,6 +24,13 @@ WP Agent provides comprehensive WordPress diagnostics and maintenance checks.
 
 ## Diagnostic modules
 
+### 🩺 WP-CLI health
+
+- **Boot check**: Confirms wp-cli can actually boot WordPress (`wp option get siteurl`), not just run its own built-in commands
+- **Error classification**: Recognizes the "Declaration of X::method() must be compatible with Y::method()" pattern as a PHP-version-specific engine bug rather than a genuine code error, and surfaces the raw wp-cli error text for anything else
+- **PHP version cross-check**: Compares the PHP version wp-cli runs under against the PHP version(s) actually serving web traffic (detected from running `php-fpm`/`lsphp` worker processes), warning on a mismatch — a bug tied to one PHP version can silently break wp-cli while the live site stays healthy, or vice versa
+- **Staleness check**: Warns when the installed wp-cli is older than 2.5, since older phars carry known PHP 8 incompatibility bugs in bundled commands
+
 ### 💾 Database
 
 - **Integrity checks**: Runs `wp db check` to verify database health
@@ -63,7 +70,7 @@ WP Agent provides comprehensive WordPress diagnostics and maintenance checks.
 
 ### ⚡ Performance
 
-- **Autoloaded options**: Analyzes size of autoloaded data (falls back to a raw DB query if wp-cli fails)
+- **Autoloaded options**: Analyzes size of autoloaded data (falls back to a raw DB query if wp-cli fails, logging wp-cli's original error so the cause of the fallback isn't silently discarded)
 - **Cron events**: Checks whether `DISABLE_WP_CRON` is set and, if so, verifies a system crontab/`/etc/cron.d` entry actually hits `wp-cron.php` — not just that a cron command ran
 - **Object cache**: Detects Redis, W3 Total Cache, or LiteSpeed Cache, plus an `object-cache.php` drop-in or a running Memcached process
 - **PHP limits**: Checks `memory_limit` and `max_execution_time` against the number of active plugins, warning when they're too low for the site's footprint
@@ -114,6 +121,7 @@ Each module provides:
 ├─────────────┬──────────┬────────────────────────┤
 │ Module      │ Status   │ Details                │
 ├─────────────┼──────────┼────────────────────────┤
+│ WpCliHealth │ ✓ OK     │ wp-cli booted, PHP OK  │
 │ Database    │ ✓ OK     │ All checks passed      │
 │ Plugins     │ ⚠ WARN   │ 3 updates available    │
 │ System      │ ✓ OK     │ PHP 8.2, 45% disk used │

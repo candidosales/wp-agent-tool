@@ -20,13 +20,25 @@ impl Diagnosis for PerformanceDiagnosis {
             Some(prefix) => {
                  let prefix = prefix.trim();
                  let query = format!("SELECT SUM(LENGTH(option_value)) FROM {}options WHERE autoload = 'yes'", prefix);
-                 let size_result = wp.run(&["db", "query", &query, "--skip-column-names"], root)
-                     .or_else(|_| wp.raw_query(root, &query));
-                 match size_result {
+                 match wp.run(&["db", "query", &query, "--skip-column-names"], root) {
                      Ok(size_str) => {
                          self.analyze_autoload_size(&size_str, &mut overall_status, &mut details);
                      }
-                     Err(_) => details.push("Could not determine autoloaded options size (wp-cli and raw DB fallback both failed).".to_string()),
+                     Err(wp_err) => {
+                         details.push(format!(
+                             "wp-cli db query failed, falling back to raw DB connection. wp-cli error: {}",
+                             wp_err
+                         ));
+                         match wp.raw_query(root, &query) {
+                             Ok(size_str) => {
+                                 self.analyze_autoload_size(&size_str, &mut overall_status, &mut details);
+                             }
+                             Err(raw_err) => details.push(format!(
+                                 "Could not determine autoloaded options size (raw DB fallback also failed: {}).",
+                                 raw_err
+                             )),
+                         }
+                     }
                  }
             }
             None => details.push("Could not determine table prefix.".to_string()),
