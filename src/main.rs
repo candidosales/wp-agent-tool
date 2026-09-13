@@ -21,6 +21,7 @@ use diagnosis::patches::PatchesDiagnosis;
 use diagnosis::compromise::CompromiseDiagnosis;
 use diagnosis::exposure::ExposureDiagnosis;
 use diagnosis::mail::MailDiagnosis;
+use diagnosis::wpcli_health::WpCliHealthDiagnosis;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
@@ -53,6 +54,7 @@ fn main() -> anyhow::Result<()> {
     eprintln!("\nRunning diagnoses...");
     
     let modules: Vec<Box<dyn Diagnosis>> = vec![
+        Box::new(WpCliHealthDiagnosis),
         Box::new(DatabaseDiagnosis),
         Box::new(PluginDiagnosis),
         Box::new(SystemDiagnosis),

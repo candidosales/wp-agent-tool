@@ -21,6 +21,7 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
 - **Smart root detection**: Automatically finds your WordPress installation
 - **Root execution support**: Handles execution as root seamlessly
 - **Comprehensive diagnostics**:
+  - WP-CLI health check: verifies wp-cli can actually boot WordPress and flags a stale wp-cli phar
   - Database integrity and optimization checks
   - Plugin updates, security audits, and redundant-plugin detection (e.g. duplicate security scanners or image optimizers)
   - PHP patch status: running PHP vs. php.net's latest release per branch, end-of-life PHP branches and Ubuntu releases
@@ -32,7 +33,7 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
   - Error log scanning for PHP fatal errors and warnings, ranked by offending plugin, plus noisy-non-fatal-plugin flagging
   - Scanner/bot traffic detection from the access log (bursty 404s, known-malicious-path hits), fail2ban presence check, and CPU load-vs-traffic correlation
   - Maintenance checks (revisions, transients, debug logs)
-- **Resilient to a broken wp-cli**: falls back to a direct database query when wp-cli itself fails
+- **Resilient to a broken wp-cli**: falls back to a direct database query when wp-cli itself fails, logging wp-cli's original error alongside the fallback
 - **Color-coded reports**: Easy-to-read summary with OK/WARNING/ERROR indicators
 
 ## Documentation
@@ -90,7 +91,8 @@ src/
     ├── performance.rs
     ├── maintenance.rs
     ├── errorlog.rs
-    └── scanner.rs
+    ├── scanner.rs
+    └── wpcli_health.rs
 ```
 
 ### Building from source

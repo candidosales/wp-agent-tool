@@ -1,0 +1,11 @@
+#!/bin/sh
+# Stub wp-cli. Env: BOOT=ok|fatal, WPCLI_VERSION. Commands that don't need WordPress
+# (`cli info`, `config get`) always work, like the real wp-cli.
+case "$*" in
+  *"cli info"*) echo "{\"wp_cli_version\":\"$WPCLI_VERSION\",\"php_version\":\"7.4.33\"}";;
+  *"config get table_prefix"*) echo wp_;;
+  *)
+    [ "$BOOT" = ok ] && case "$*" in *"option get siteurl"*) echo https://example.com; exit 0;; esac
+    echo "PHP Fatal error:  Declaration of Foo::fromArray(array \$a): Foo must be compatible with Bar::fromArray(array \$a): Bar in /var/www/html/wp-content/plugins/x/lib.php on line 12" >&2
+    exit 255;;
+esac
