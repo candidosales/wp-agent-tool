@@ -17,6 +17,7 @@ use diagnosis::performance::PerformanceDiagnosis;
 use diagnosis::maintenance::MaintenanceDiagnosis;
 use diagnosis::errorlog::ErrorLogDiagnosis;
 use diagnosis::scanner::ScannerDiagnosis;
+use diagnosis::compromise::CompromiseDiagnosis;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
@@ -54,6 +55,7 @@ fn main() -> anyhow::Result<()> {
         Box::new(SystemDiagnosis),
         Box::new(NetworkDiagnosis),
         Box::new(SecurityDiagnosis),
+        Box::new(CompromiseDiagnosis),
         Box::new(PerformanceDiagnosis),
         Box::new(MaintenanceDiagnosis),
         Box::new(ErrorLogDiagnosis),

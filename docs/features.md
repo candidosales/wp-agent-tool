@@ -61,6 +61,18 @@ WP Agent provides comprehensive WordPress diagnostics and maintenance checks.
 - **File permissions**: Reviews critical file and directory permissions
 - **SSL/HTTPS**: Verifies SSL certificate status
 
+### 🚨 Compromise
+
+The Linux release is a static binary, so an `LD_PRELOAD` rootkit can't hook it. These checks compare what the kernel shows wp-agent with what the system's `ps` and `ls` report:
+
+- **Preload hook**: Flags a non-empty `/etc/ld.so.preload`
+- **Hidden processes**: PIDs in `/proc` that `ps` doesn't list
+- **Hidden files**: Files in system and temp dirs that `ls` doesn't list
+- **Suspicious executables**: Processes running from `/tmp`, `/var/tmp`, `/dev/shm` or a deleted binary that no longer exists on disk (binaries replaced by upgrades are ignored), and more than one `dockerd`
+- **Webshells**: PHP files in `wp-content/uploads` (ignores "Silence is golden" stubs)
+
+Any finding is an ERROR: treat the server as compromised and rebuild it. Run as root to check every process. Test: `e2e/compromise.sh` (needs Docker).
+
 ### ⚡ Performance
 
 - **Autoloaded options**: Analyzes size of autoloaded data (falls back to a raw DB query if wp-cli fails)
