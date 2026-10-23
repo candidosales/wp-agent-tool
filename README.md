@@ -24,17 +24,20 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
   - WP-CLI health check: verifies wp-cli can actually boot WordPress and flags a stale wp-cli phar
   - Database integrity and optimization checks
   - Plugin updates, security audits, and redundant-plugin detection (e.g. duplicate security scanners or image optimizers)
-  - PHP patch status: running PHP vs. php.net's latest release per branch, end-of-life PHP branches and Ubuntu releases
+  - PHP patch status: the PHP the web server runs and wp-cli's PHP vs. php.net's latest release per branch, end-of-life PHP branches and Ubuntu releases
   - System resource monitoring
   - Network connectivity verification
   - Security checksums and debug mode detection
   - Compromise detection: `LD_PRELOAD` rootkits, processes and files hidden from `ps`/`ls`, binaries running from temp dirs, extra `dockerd` daemons, PHP webshells in uploads
+  - Exposure: database dumps, archives and export-plugin files publicly downloadable from uploads; administrators/editors registered in the last 90 days
+  - Mail: no SMTP plugin with direct Postfix delivery (rejected by Gmail/Outlook), missing SASL password map on a relay, messages stuck in the Postfix queue
   - Performance analysis (object cache incl. LiteSpeed/Memcached, autoloaded options, wp-cron vs. system cron, PHP memory_limit/max_execution_time, image-upload CPU risk on constrained hardware)
   - Error log scanning for PHP fatal errors and warnings, ranked by offending plugin, plus noisy-non-fatal-plugin flagging
   - Scanner/bot traffic detection from the access log (bursty 404s, known-malicious-path hits), fail2ban presence check, and CPU load-vs-traffic correlation
   - Maintenance checks (revisions, transients, debug logs)
 - **Resilient to a broken wp-cli**: falls back to a direct database query when wp-cli itself fails, logging wp-cli's original error alongside the fallback
 - **Color-coded reports**: Easy-to-read summary with OK/WARNING/ERROR indicators
+- **JSON output and exit codes**: `--json` for monitoring and CI, non-zero exit when any check reports ERROR
 
 ## Documentation
 
@@ -65,6 +68,18 @@ The tool will automatically:
 3. Run comprehensive diagnostics
 4. Display a summary report
 
+### JSON output and exit codes
+
+```bash
+wp-agent --json > report.json   # report on stdout, progress on stderr
+```
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Ran; no module reported ERROR (warnings allowed) |
+| `1` | Could not run (WP-CLI or WordPress root not found) |
+| `2` | Ran; at least one module reported ERROR |
+
 For more installation options, see the [Installation Guide](./docs/installation.md).
 
 ## Prerequisites
@@ -92,7 +107,13 @@ src/
     ├── maintenance.rs
     ├── errorlog.rs
     ├── scanner.rs
+    ├── patches.rs
+    ├── compromise.rs
+    ├── exposure.rs
+    ├── mail.rs
     └── wpcli_health.rs
+
+e2e/                     # Docker end-to-end tests, reports in e2e/artifacts/
 ```
 
 ### Building from source
@@ -107,6 +128,12 @@ cargo build --release
 
 # Run tests
 cargo test
+
+# End-to-end tests (need Docker; patches.sh also needs network)
+./e2e/compromise.sh
+./e2e/patches.sh
+./e2e/exposure-mail.sh
+./e2e/wpcli-health.sh
 
 # The binary will be at target/release/wp-agent
 ```
