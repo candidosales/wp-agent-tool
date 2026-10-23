@@ -17,10 +17,10 @@ impl Diagnosis for MailDiagnosis {
         let mut status = Status::Ok;
 
         eprintln!("    > Looking for an active SMTP plugin...");
-        let plugin = match wp.run(&["plugin", "list", "--status=active", "--field=name"], root) {
-            Ok(out) => out.lines().map(str::trim).find(|n| MAIL_PLUGIN_HINTS.iter().any(|h| n.contains(h))).map(String::from),
+        let plugin = match wp.active_plugins(root) {
+            Ok(plugins) => plugins.into_iter().find(|n| MAIL_PLUGIN_HINTS.iter().any(|h| n.contains(h))),
             Err(_) => {
-                details.push("wp plugin list failed: could not check for an SMTP plugin.".to_string());
+                details.push("Could not list active plugins (wp-cli and raw DB both failed): could not check for an SMTP plugin.".to_string());
                 None
             }
         };

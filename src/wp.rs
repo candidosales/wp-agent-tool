@@ -116,16 +116,20 @@ impl WpCli {
     /// Used as a fallback when wp-cli itself is broken (e.g. a fatal error in
     /// WordPress core/a plugin makes every `wp` invocation fail, as seen when
     /// a core bug crashed wp-cli entirely on a live site).
-    pub fn db_config(&self, root: &Path) -> anyhow::Result<(String, String, String, String)> {
+    fn db_config(&self, root: &Path) -> anyhow::Result<(String, String, String, String)> {
         let config_path = root.join("wp-config.php");
         let contents = fs::read_to_string(&config_path)?;
 
         let extract = |key: &str| -> anyhow::Result<String> {
             let needle = format!("define('{}'", key);
             let needle_dq = format!("define(\"{}\"", key);
+            // Stock wp-config.php writes `define( 'DB_NAME', ... )`, with spaces.
             let line = contents
                 .lines()
-                .find(|l| l.contains(&needle) || l.contains(&needle_dq))
+                .find(|l| {
+                    let l: String = l.chars().filter(|c| !c.is_whitespace()).collect();
+                    l.contains(&needle) || l.contains(&needle_dq)
+                })
                 .ok_or_else(|| anyhow::anyhow!("{} not found in wp-config.php", key))?;
 
             let mut parts = line.splitn(3, ['\'', '"']);
@@ -146,20 +150,68 @@ impl WpCli {
         Ok((name, user, pass, host))
     }
 
-    /// Runs a raw SQL query directly via the `mysql` client, bypassing wp-cli
-    /// entirely. Only use for read-only queries as a fallback when `run()`
-    /// fails because wp-cli itself is broken, not as a general replacement —
-    /// writes made this way skip WordPress's own cache invalidation.
-    pub fn raw_query(&self, root: &Path, query: &str) -> anyhow::Result<String> {
+    /// Read-only SQL via `wp db query`, falling back to the `mysql` client when
+    /// wp-cli itself is broken. Writes must go through wp-cli: the fallback skips
+    /// WordPress's own cache invalidation.
+    pub fn query(&self, root: &Path, sql: &str) -> anyhow::Result<String> {
+        let wp_err = match self.run(&["db", "query", sql, "--skip-column-names"], root) {
+            Ok(out) => return Ok(out.trim().to_string()),
+            Err(e) => e,
+        };
+        self.raw_query(root, sql)
+            .map_err(|raw_err| anyhow::anyhow!("{}; raw DB fallback also failed: {}", wp_err, raw_err))
+    }
+
+    /// `$table_prefix`, read from wp-config.php when `wp config get` fails.
+    pub fn table_prefix(&self, root: &Path) -> anyhow::Result<String> {
+        if let Ok(prefix) = self.run(&["config", "get", "table_prefix"], root) {
+            return Ok(prefix.trim().to_string());
+        }
+        let contents = fs::read_to_string(root.join("wp-config.php"))?;
+        contents
+            .lines()
+            .find_map(|l| {
+                let rest = l.trim().strip_prefix("$table_prefix")?;
+                let mut parts = rest.split(['\'', '"']);
+                parts.next(); // ` = ` up to the opening quote
+                parts.next().map(String::from)
+            })
+            .ok_or_else(|| anyhow::anyhow!("$table_prefix not found in wp-config.php"))
+    }
+
+    /// Slugs of active plugins, read from the `active_plugins` option when wp-cli
+    /// can't boot WordPress.
+    pub fn active_plugins(&self, root: &Path) -> anyhow::Result<Vec<String>> {
+        let wp_err = match self.run(&["plugin", "list", "--status=active", "--field=name"], root) {
+            Ok(out) => return Ok(out.lines().map(str::trim).filter(|l| !l.is_empty()).map(String::from).collect()),
+            Err(e) => e,
+        };
+        let prefix = self.table_prefix(root)?;
+        let sql = format!("SELECT option_value FROM {}options WHERE option_name = 'active_plugins'", prefix);
+        let serialized = self
+            .raw_query(root, &sql)
+            .map_err(|raw_err| anyhow::anyhow!("{}; raw DB fallback also failed: {}", wp_err, raw_err))?;
+        // a:2:{i:0;s:19:"akismet/akismet.php";i:1;s:9:"hello.php";} -> akismet, hello
+        Ok(serialized
+            .split('"')
+            .skip(1)
+            .step_by(2)
+            .map(|file| file.split('/').next().unwrap_or(file).trim_end_matches(".php").to_string())
+            .collect())
+    }
+
+    fn raw_query(&self, root: &Path, query: &str) -> anyhow::Result<String> {
         let (name, user, pass, host) = self.db_config(root)?;
 
+        // MYSQL_PWD, not -p<pass>: argv is readable by every local user via ps.
         let output = Command::new("mysql")
-            .args(["-h", &host, "-u", &user, &format!("-p{}", pass), "-N", "-e", query, &name])
+            .args(["-h", &host, "-u", &user, "-N", "-e", query, &name])
+            .env("MYSQL_PWD", &pass)
             .output()?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(anyhow::anyhow!("raw mysql query failed: {}", stderr));
+            return Err(anyhow::anyhow!("raw mysql query failed: {}", stderr.trim()));
         }
 
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
@@ -205,7 +257,7 @@ impl WpCli {
         if !output.status.success() {
              let stderr = String::from_utf8_lossy(&output.stderr);
              // handle edge case where wp-cli outputs errors to stdout sometimes or vice versa
-             return Err(anyhow::anyhow!("WP-CLI failed: {}", stderr));
+             return Err(anyhow::anyhow!("WP-CLI failed: {}", stderr.trim()));
         }
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())

@@ -1,6 +1,8 @@
 #!/bin/sh
-# Stub wp-cli. Env: BOOT=ok|fatal, WPCLI_VERSION. Commands that don't need WordPress
-# (`cli info`, `config get`) always work, like the real wp-cli.
+# Stub wp-cli. Env: BOOT=ok|fatal|dead, WPCLI_VERSION. With ok/fatal, commands that
+# don't need WordPress (`cli info`, `config get`) work, like the real wp-cli; dead
+# means wp-cli itself can't run (e.g. its PHP is broken), so every command fails.
+[ "$BOOT" = dead ] && { echo "wp-cli: PHP Fatal error in wp-cli.phar" >&2; exit 255; }
 case "$*" in
   *"cli info"*) echo "{\"wp_cli_version\":\"$WPCLI_VERSION\",\"php_version\":\"7.4.33\"}";;
   *"config get table_prefix"*) echo wp_;;
