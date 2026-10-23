@@ -19,15 +19,17 @@ use diagnosis::errorlog::ErrorLogDiagnosis;
 use diagnosis::scanner::ScannerDiagnosis;
 use diagnosis::patches::PatchesDiagnosis;
 use diagnosis::compromise::CompromiseDiagnosis;
+use diagnosis::exposure::ExposureDiagnosis;
+use diagnosis::mail::MailDiagnosis;
 
 fn main() -> anyhow::Result<()> {
     let args = Cli::parse();
     
     if args.debug > 0 {
-        println!("Debug mode enabled");
+        eprintln!("Debug mode enabled");
     }
 
-    println!("{}", style("WP Agent starting...").bold().cyan());
+    eprintln!("{}", style("WP Agent starting...").bold().cyan());
     
     let mut wp = WpCli::new();
     
@@ -45,10 +47,10 @@ fn main() -> anyhow::Result<()> {
             std::process::exit(1);
         }
     };
-    println!("{} WordPress root found at: {:?}", style("✔").green(), root);
+    eprintln!("{} WordPress root found at: {:?}", style("✔").green(), root);
 
     // 3. Run Diagnoses
-    println!("\nRunning diagnoses...");
+    eprintln!("\nRunning diagnoses...");
     
     let modules: Vec<Box<dyn Diagnosis>> = vec![
         Box::new(DatabaseDiagnosis),
@@ -58,6 +60,8 @@ fn main() -> anyhow::Result<()> {
         Box::new(NetworkDiagnosis),
         Box::new(SecurityDiagnosis),
         Box::new(CompromiseDiagnosis),
+        Box::new(ExposureDiagnosis),
+        Box::new(MailDiagnosis),
         Box::new(PerformanceDiagnosis),
         Box::new(MaintenanceDiagnosis),
         Box::new(ErrorLogDiagnosis),
@@ -83,7 +87,15 @@ fn main() -> anyhow::Result<()> {
     }
     
     // 4. Report
-    report::display(&reports);
-    
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&reports)?);
+    } else {
+        report::display(&reports);
+    }
+
+    // 1 = could not run, 2 = ran and found errors, so cron/CI can alert on findings.
+    if reports.iter().any(|r| r.status == diagnosis::Status::Error) {
+        std::process::exit(2);
+    }
     Ok(())
 }

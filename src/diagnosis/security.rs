@@ -7,12 +7,12 @@ pub struct SecurityDiagnosis;
 
 impl Diagnosis for SecurityDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Security Diagnosis...");
+        eprintln!("  Running Security Diagnosis...");
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
 
         // 1. Core Verify Checksums
-        println!("    > Verifying core checksums...");
+        eprintln!("    > Verifying core checksums...");
         match wp.run(&["core", "verify-checksums"], root) {
             Ok(_) => {
                 details.push("Core checksums verified.".to_string());
@@ -24,7 +24,7 @@ impl Diagnosis for SecurityDiagnosis {
         }
 
         // 2. Check Debug Mode
-        println!("    > Checking WP_DEBUG status...");
+        eprintln!("    > Checking WP_DEBUG status...");
         match wp.run(&["config", "get", "WP_DEBUG"], root) {
             Ok(output) => {
                 if output.trim() == "true" || output.trim() == "1" {
@@ -40,7 +40,7 @@ impl Diagnosis for SecurityDiagnosis {
         }
 
         // 3. User Audit (Admin check)
-        println!("    > Checking for admin user...");
+        eprintln!("    > Checking for admin user...");
         match wp.run(&["user", "list", "--role=administrator", "--field=user_login", "--format=csv"], root) {
              Ok(output) => {
                  self.analyze_users(&output, &mut overall_status, &mut details);

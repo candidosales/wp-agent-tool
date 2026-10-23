@@ -1,8 +1,9 @@
 use std::path::Path;
 use crate::wp::WpCli;
 use anyhow::Result;
+use serde::Serialize;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct DiagnosisReport {
     pub module: String,
     pub status: Status,
@@ -10,7 +11,7 @@ pub struct DiagnosisReport {
     pub details: Vec<String>,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Serialize)]
 pub enum Status {
     Ok,
     Warning,
@@ -32,3 +33,5 @@ pub mod errorlog;
 pub mod scanner;
 pub mod patches;
 pub mod compromise;
+pub mod exposure;
+pub mod mail;

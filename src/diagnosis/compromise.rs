@@ -20,28 +20,28 @@ pub struct CompromiseDiagnosis;
 
 impl Diagnosis for CompromiseDiagnosis {
     fn run(&self, _wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Compromise Diagnosis...");
+        eprintln!("  Running Compromise Diagnosis...");
         let mut details = Vec::new();
         let mut findings = 0;
 
         // Linux-only checks; on macOS (dev machines) only the uploads check applies.
         if Path::new("/proc/self").exists() {
-            println!("    > Checking {}...", PRELOAD_PATH);
+            eprintln!("    > Checking {}...", PRELOAD_PATH);
             findings += Self::check_preload(&mut details);
 
-            println!("    > Comparing /proc with ps for hidden processes...");
+            eprintln!("    > Comparing /proc with ps for hidden processes...");
             findings += Self::check_hidden_processes(&mut details);
 
-            println!("    > Comparing directory listings with ls for hidden files...");
+            eprintln!("    > Comparing directory listings with ls for hidden files...");
             findings += Self::check_hidden_files(&mut details);
 
-            println!("    > Checking process executables...");
+            eprintln!("    > Checking process executables...");
             findings += Self::check_process_exes(&mut details);
         } else {
             details.push("Not Linux: skipped preload, hidden-process, hidden-file and executable checks.".to_string());
         }
 
-        println!("    > Looking for PHP files in uploads...");
+        eprintln!("    > Looking for PHP files in uploads...");
         findings += Self::check_upload_php(root, &mut details);
 
         let (status, message) = if findings > 0 {

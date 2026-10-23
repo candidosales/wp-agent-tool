@@ -7,12 +7,12 @@ pub struct DatabaseDiagnosis;
 
 impl Diagnosis for DatabaseDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Database Diagnosis...");
+        eprintln!("  Running Database Diagnosis...");
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
 
         // 1. wp db check
-        println!("    > Checking database integrity...");
+        eprintln!("    > Checking database integrity...");
         match wp.run(&["db", "check"], root) {
             Ok(output) => {
                 details.push(format!("Check: {}", output.trim()));
@@ -24,7 +24,7 @@ impl Diagnosis for DatabaseDiagnosis {
         }
 
         // 2. wp db size
-        println!("    > Checking database size...");
+        eprintln!("    > Checking database size...");
         match wp.run(&["db", "size", "--human-readable"], root) {
             Ok(output) => {
                  details.push(format!("Size: {}", output.trim()));

@@ -29,16 +29,16 @@ impl WpCli {
 
     pub fn check_and_install(&mut self) -> anyhow::Result<()> {
         if self.is_installed() {
-            println!("{} WP-CLI is installed.", style("✔").green());
+            eprintln!("{} WP-CLI is installed.", style("✔").green());
             return Ok(());
         }
 
-        println!("{} WP-CLI is NOT installed globally.", style("✘").red());
+        eprintln!("{} WP-CLI is NOT installed globally.", style("✘").red());
         
         // Check if local phar exists from previous run
         let local_phar = std::env::current_dir()?.join("wp-cli.phar");
         if local_phar.exists() {
-             println!("Found local wp-cli.phar.");
+             eprintln!("Found local wp-cli.phar.");
              self.executable_path = local_phar;
              return Ok(());
         }
@@ -58,7 +58,7 @@ impl WpCli {
     }
 
     fn install(&self) -> anyhow::Result<PathBuf> {
-        println!("Downloading WP-CLI...");
+        eprintln!("Downloading WP-CLI...");
         let target_url = "https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar";
         let response = reqwest::blocking::get(target_url)?;
         
@@ -69,12 +69,12 @@ impl WpCli {
         let content = response.bytes()?;
         copy(&mut content.as_ref(), &mut dest)?;
 
-        println!("Setting permissions...");
+        eprintln!("Setting permissions...");
         let mut perms = fs::metadata(&wp_path)?.permissions();
         perms.set_mode(0o755);
         fs::set_permissions(&wp_path, perms)?;
 
-        println!("{} WP-CLI installed successfully at {:?}.", style("✔").green(), wp_path);
+        eprintln!("{} WP-CLI installed successfully at {:?}.", style("✔").green(), wp_path);
         
         Ok(wp_path)
     }
@@ -94,12 +94,12 @@ impl WpCli {
         // Fallback: Check /var/www/html
         let default_path = PathBuf::from("/var/www/html");
         if default_path.join("wp-config.php").exists() {
-             println!("{} WordPress root found at default location: /var/www/html", style("✔").green());
+             eprintln!("{} WordPress root found at default location: /var/www/html", style("✔").green());
              return Ok(default_path);
         }
         
         // If not found, ask user
-        println!("{} Could not find WordPress root (wp-config.php not found).", style("?").yellow());
+        eprintln!("{} Could not find WordPress root (wp-config.php not found).", style("?").yellow());
         let path_str: String = dialoguer::Input::new()
             .with_prompt("Please enter the path to the WordPress root directory")
             .interact_text()?;

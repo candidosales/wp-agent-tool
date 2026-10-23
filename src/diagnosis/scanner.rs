@@ -32,7 +32,7 @@ pub struct ScannerDiagnosis;
 
 impl Diagnosis for ScannerDiagnosis {
     fn run(&self, _wp: &WpCli, _root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Scanner/Bot Traffic Diagnosis...");
+        eprintln!("  Running Scanner/Bot Traffic Diagnosis...");
         let mut details = Vec::new();
         let mut status = Status::Ok;
 

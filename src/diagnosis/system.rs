@@ -8,14 +8,14 @@ pub struct SystemDiagnosis;
 
 impl Diagnosis for SystemDiagnosis {
     fn run(&self, _wp: &WpCli, _root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running System Diagnosis..."); // Keep println or logging?
+        eprintln!("  Running System Diagnosis..."); // Keep println or logging?
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
         
         // ... (rest is same logic, just fixing the arg names)
         
         // 2. Tmp folder analysis
-        println!("    > Checking disk usage...");
+        eprintln!("    > Checking disk usage...");
         let disks = Disks::new_with_refreshed_list();
         let mut tmp_found = false;
         
