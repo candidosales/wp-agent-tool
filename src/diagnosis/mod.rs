@@ -35,3 +35,4 @@ pub mod patches;
 pub mod compromise;
 pub mod exposure;
 pub mod mail;
+pub mod wpcli_health;
