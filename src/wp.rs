@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use which::which;
 use console::style;
 use std::fs;
-use std::io::copy;
 use std::os::unix::fs::PermissionsExt;
 use std::os::unix::fs::MetadataExt;
 
@@ -60,14 +59,13 @@ impl WpCli {
     fn install(&self) -> anyhow::Result<PathBuf> {
         eprintln!("Downloading WP-CLI...");
         let target_url = "https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar";
-        let response = reqwest::blocking::get(target_url)?;
-        
+        // Fetch fully before writing: a 404 page or a cut-off body left as
+        // wp-cli.phar would be reused by every later run.
+        let content = reqwest::blocking::get(target_url)?.error_for_status()?.bytes()?;
+
         let current_dir = std::env::current_dir()?;
         let wp_path = current_dir.join("wp-cli.phar");
-        
-        let mut dest = fs::File::create(&wp_path)?;
-        let content = response.bytes()?;
-        copy(&mut content.as_ref(), &mut dest)?;
+        fs::write(&wp_path, &content)?;
 
         eprintln!("Setting permissions...");
         let mut perms = fs::metadata(&wp_path)?.permissions();

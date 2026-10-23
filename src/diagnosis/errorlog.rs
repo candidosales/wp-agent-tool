@@ -39,7 +39,7 @@ impl Diagnosis for ErrorLogDiagnosis {
             }
         };
 
-        let tail = match Self::tail_file(&log_path, TAIL_LINES) {
+        let tail = match super::tail_file(&log_path, TAIL_LINES) {
             Ok(t) => t,
             Err(e) => {
                 details.push(format!("Found log at {:?} but could not read it: {}", log_path, e));
@@ -88,12 +88,6 @@ impl ErrorLogDiagnosis {
         None
     }
 
-    fn tail_file(path: &Path, max_lines: usize) -> std::io::Result<String> {
-        let contents = std::fs::read_to_string(path)?;
-        let lines: Vec<&str> = contents.lines().collect();
-        let start = lines.len().saturating_sub(max_lines);
-        Ok(lines[start..].join("\n"))
-    }
 
     fn analyze_log(&self, log_tail: &str, status: &mut Status, details: &mut Vec<String>) {
         let mut fatal_count = 0usize;
