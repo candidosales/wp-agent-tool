@@ -8,12 +8,12 @@ pub struct PerformanceDiagnosis;
 
 impl Diagnosis for PerformanceDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Performance Diagnosis...");
+        eprintln!("  Running Performance Diagnosis...");
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
 
         // 1. Check Autoloaded Options Size
-        println!("    > Checking autoloaded options size...");
+        eprintln!("    > Checking autoloaded options size...");
 
         let prefix = wp.run(&["config", "get", "table_prefix"], root).ok();
         match &prefix {
@@ -33,19 +33,19 @@ impl Diagnosis for PerformanceDiagnosis {
         }
 
         // 2. Check Cron: flag DISABLE_WP_CRON with no real replacement, not just "command ran ok".
-        println!("    > Checking cron events...");
+        eprintln!("    > Checking cron events...");
         self.analyze_cron(wp, root, &mut overall_status, &mut details);
 
         // 3. PHP memory_limit / max_execution_time vs plugin count
-        println!("    > Checking PHP limits...");
+        eprintln!("    > Checking PHP limits...");
         self.analyze_php_limits(wp, root, &mut overall_status, &mut details);
 
         // 4. Object Cache
-        println!("    > Checking object cache...");
+        eprintln!("    > Checking object cache...");
         self.analyze_object_cache(wp, root, &mut details);
 
         // 5. Divi responsive-image CPU risk on constrained hardware
-        println!("    > Checking image processing CPU risk...");
+        eprintln!("    > Checking image processing CPU risk...");
         let active_theme = wp
             .run(&["theme", "list", "--status=active", "--field=name", "--format=csv"], root)
             .map(|s| s.lines().last().unwrap_or("").trim().to_string())

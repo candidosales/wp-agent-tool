@@ -7,12 +7,12 @@ pub struct NetworkDiagnosis;
 
 impl Diagnosis for NetworkDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Network Diagnosis...");
+        eprintln!("  Running Network Diagnosis...");
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
 
         // 1. Check external connectivity (google.com)
-        println!("    > Checking external connectivity...");
+        eprintln!("    > Checking external connectivity...");
         // Using reqwest
         match reqwest::blocking::get("https://www.google.com") {
             Ok(_) => details.push("External connectivity (Google): OK".to_string()),
@@ -24,12 +24,12 @@ impl Diagnosis for NetworkDiagnosis {
 
         // 2. Check WordPress Site Reachability
         // Get site URL
-        println!("    > Fetching site URL...");
+        eprintln!("    > Fetching site URL...");
         match wp.run(&["option", "get", "home"], root) {
             Ok(url) => {
                 let url = url.trim();
                 details.push(format!("Site URL: {}", url));
-                println!("    > Checking site reachability...");
+                eprintln!("    > Checking site reachability...");
                 match reqwest::blocking::get(url) {
                     Ok(resp) => {
                         let status = resp.status();

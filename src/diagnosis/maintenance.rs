@@ -7,12 +7,12 @@ pub struct MaintenanceDiagnosis;
 
 impl Diagnosis for MaintenanceDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Maintenance Diagnosis...");
+        eprintln!("  Running Maintenance Diagnosis...");
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
 
         // 1. Post Revisions
-        println!("    > Checking post revisions...");
+        eprintln!("    > Checking post revisions...");
         // Count revisions: `wp post list --post_type=revision --format=count`
         match wp.run(&["post", "list", "--post_type=revision", "--format=count"], root) {
             Ok(count_str) => {
@@ -22,7 +22,7 @@ impl Diagnosis for MaintenanceDiagnosis {
         }
 
         // 2. Expired Transients
-        println!("    > Checking expired transients...");
+        eprintln!("    > Checking expired transients...");
         // `wp transient delete --expired --dry-run` or just assume status
         // WP-CLI doesn't have a direct "count expired" without delete command easily exposed, 
         // but `wp transient delete --expired` returns "Deleted X transients".
@@ -39,7 +39,7 @@ impl Diagnosis for MaintenanceDiagnosis {
         }
 
         // 3. Check Debug Log Size
-        println!("    > Checking debug.log...");
+        eprintln!("    > Checking debug.log...");
         // Check content folder usually wp-content/debug.log
         let debug_log = root.join("wp-content/debug.log");
         if debug_log.exists() {

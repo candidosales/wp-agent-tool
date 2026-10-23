@@ -20,7 +20,7 @@ pub struct ErrorLogDiagnosis;
 
 impl Diagnosis for ErrorLogDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Error Log Diagnosis...");
+        eprintln!("  Running Error Log Diagnosis...");
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
 

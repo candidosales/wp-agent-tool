@@ -22,11 +22,11 @@ pub struct PatchesDiagnosis;
 
 impl Diagnosis for PatchesDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Patches Diagnosis...");
+        eprintln!("  Running Patches Diagnosis...");
         let mut details = Vec::new();
         let mut status = Status::Ok;
 
-        println!("    > Fetching supported PHP branches from php.net...");
+        eprintln!("    > Fetching supported PHP branches from php.net...");
         let latest = match Self::fetch_latest() {
             Ok(l) => l,
             Err(e) => {
@@ -35,7 +35,7 @@ impl Diagnosis for PatchesDiagnosis {
             }
         };
 
-        println!("    > Checking the PHP the web server runs...");
+        eprintln!("    > Checking the PHP the web server runs...");
         let served = Self::served_php();
         if served.is_empty() {
             details.push("No PHP worker running right now (LiteSpeed starts them on demand): only wp-cli's PHP was checked.".to_string());
@@ -44,7 +44,7 @@ impl Diagnosis for PatchesDiagnosis {
             Self::check_php(&format!("Web server PHP ({})", exe), version, &latest, &mut status, &mut details);
         }
 
-        println!("    > Checking wp-cli's PHP...");
+        eprintln!("    > Checking wp-cli's PHP...");
         if let Some(version) = Self::wp_cli_php(wp, root) {
             Self::check_php("wp-cli PHP", &version, &latest, &mut status, &mut details);
             let served_branches: BTreeSet<String> = served.iter().map(|(_, v)| Self::branch(v)).collect();
@@ -54,7 +54,7 @@ impl Diagnosis for PatchesDiagnosis {
             }
         }
 
-        println!("    > Checking OS support status...");
+        eprintln!("    > Checking OS support status...");
         Self::check_os(&mut status, &mut details);
 
         let message = match status {

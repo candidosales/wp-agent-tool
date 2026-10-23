@@ -29,9 +29,9 @@ const REDUNDANCY_CATEGORIES: &[(&str, &[&str])] = &[
 
 impl Diagnosis for PluginDiagnosis {
     fn run(&self, wp: &WpCli, root: &Path) -> Result<DiagnosisReport> {
-        println!("  Running Plugin Diagnosis...");
+        eprintln!("  Running Plugin Diagnosis...");
         
-        println!("    > Fetching plugin list...");
+        eprintln!("    > Fetching plugin list...");
         let output = wp.run(&["plugin", "list", "--format=json"], root)?;
         
         self.analyze_plugins(&output)
