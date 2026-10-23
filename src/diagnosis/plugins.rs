@@ -8,7 +8,8 @@ use serde::Deserialize;
 struct Plugin {
     name: String,
     status: String,
-    update: String, // "available" or "none"
+    // "available"/"none" for plugins; drop-ins and must-use plugins report `false`.
+    update: serde_json::Value,
     version: String,
 }
 
@@ -123,7 +124,8 @@ mod tests {
     #[test]
     fn test_analyze_plugins_all_ok() -> Result<()> {
         let json = r#"[
-            {"name": "akismet", "status": "active", "update": "none", "version": "5.0"}
+            {"name": "akismet", "status": "active", "update": "none", "version": "5.0"},
+            {"name": "object-cache.php", "status": "dropin", "update": false, "version": "", "update_version": "", "auto_update": "off"}
         ]"#;
         
         let diagnosis = PluginDiagnosis;
