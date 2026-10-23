@@ -1,17 +1,7 @@
 use crate::diagnosis::{Diagnosis, DiagnosisReport, Status};
-use crate::wp::WpCli;
+use crate::wp::{Plugin, WpCli};
 use std::path::Path;
 use anyhow::Result;
-use serde::Deserialize;
-
-#[derive(Deserialize, Debug)]
-struct Plugin {
-    name: String,
-    status: String,
-    // "available"/"none" for plugins; drop-ins and must-use plugins report `false`.
-    update: serde_json::Value,
-    version: String,
-}
 
 pub struct PluginDiagnosis;
 
@@ -32,20 +22,15 @@ impl Diagnosis for PluginDiagnosis {
         eprintln!("  Running Plugin Diagnosis...");
         
         eprintln!("    > Fetching plugin list...");
-        let output = wp.run(&["plugin", "list", "--format=json"], root)?;
-        
-        self.analyze_plugins(&output)
+        self.analyze_plugins(wp.plugins(root)?)
     }
 }
 
 impl PluginDiagnosis {
-    fn analyze_plugins(&self, json_output: &str) -> Result<DiagnosisReport> {
+    fn analyze_plugins(&self, plugins: &[Plugin]) -> Result<DiagnosisReport> {
         let mut details = Vec::new();
         let mut overall_status = Status::Ok;
 
-        // Parse JSON
-        let plugins: Vec<Plugin> = serde_json::from_str(json_output)?;
-        
         // Check for updates
         let updates_available: Vec<&Plugin> = plugins.iter().filter(|p| p.update == "available").collect();
         if !updates_available.is_empty() {
@@ -67,7 +52,7 @@ impl PluginDiagnosis {
              }
         }
 
-        self.analyze_redundancy(&plugins, &mut overall_status, &mut details);
+        self.analyze_redundancy(plugins, &mut overall_status, &mut details);
 
         Ok(DiagnosisReport {
             module: "Plugins".to_string(),
@@ -112,7 +97,7 @@ mod tests {
         ]"#;
         
         let diagnosis = PluginDiagnosis;
-        let report = diagnosis.analyze_plugins(json)?;
+        let report = diagnosis.analyze_plugins(&serde_json::from_str::<Vec<Plugin>>(json)?)?;
         
         assert_eq!(report.module, "Plugins");
         matches!(report.status, Status::Warning);
@@ -129,7 +114,7 @@ mod tests {
         ]"#;
         
         let diagnosis = PluginDiagnosis;
-        let report = diagnosis.analyze_plugins(json)?;
+        let report = diagnosis.analyze_plugins(&serde_json::from_str::<Vec<Plugin>>(json)?)?;
         
         matches!(report.status, Status::Ok);
         assert!(report.details.iter().any(|d| d.contains("All plugins are up to date")));
@@ -144,7 +129,7 @@ mod tests {
         ]"#;
 
         let diagnosis = PluginDiagnosis;
-        let report = diagnosis.analyze_plugins(json)?;
+        let report = diagnosis.analyze_plugins(&serde_json::from_str::<Vec<Plugin>>(json)?)?;
 
         assert_eq!(report.status, Status::Warning);
         assert!(report.details.iter().any(|d| d.contains("security scanner") && d.contains("sucuri-scanner") && d.contains("wordfence")));
@@ -159,7 +144,7 @@ mod tests {
         ]"#;
 
         let diagnosis = PluginDiagnosis;
-        let report = diagnosis.analyze_plugins(json)?;
+        let report = diagnosis.analyze_plugins(&serde_json::from_str::<Vec<Plugin>>(json)?)?;
 
         assert_eq!(report.status, Status::Ok);
         Ok(())

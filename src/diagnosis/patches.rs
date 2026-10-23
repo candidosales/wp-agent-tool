@@ -118,9 +118,7 @@ impl PatchesDiagnosis {
     }
 
     fn wp_cli_php(wp: &WpCli, root: &Path) -> Option<String> {
-        let out = wp.run(&["cli", "info", "--format=json"], root).ok()?;
-        let json: serde_json::Value = serde_json::from_str(&out).ok()?;
-        json.get("php_version")?.as_str().map(String::from)
+        Some(wp.cli_info(root).ok()?.php_version.clone()).filter(|v| !v.is_empty())
     }
 
     /// "8.3.36-1+ubuntu24.04.1" -> "8.3"

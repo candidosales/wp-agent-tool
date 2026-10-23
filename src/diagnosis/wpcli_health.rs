@@ -28,11 +28,7 @@ impl Diagnosis for WpCliHealthDiagnosis {
         }
 
         eprintln!("    > Checking wp-cli version...");
-        let version = wp
-            .run(&["cli", "info", "--format=json"], root)
-            .ok()
-            .and_then(|o| serde_json::from_str::<serde_json::Value>(&o).ok())
-            .and_then(|j| j.get("wp_cli_version")?.as_str().map(String::from));
+        let version = wp.cli_info(root).ok().map(|i| i.wp_cli_version.clone()).filter(|v| !v.is_empty());
         match version {
             Some(v) => {
                 details.push(format!("wp-cli version: {}", v));

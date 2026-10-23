@@ -137,14 +137,9 @@ impl PerformanceDiagnosis {
 
     fn analyze_php_limits(&self, wp: &WpCli, root: &Path, active_plugin_count: usize, status: &mut Status, details: &mut Vec<String>) {
 
-        let memory_limit = wp
-            .run(&["eval", "echo ini_get('memory_limit');"], root)
-            .map(|s| s.trim().to_string())
-            .ok();
-        let max_execution_time = wp
-            .run(&["eval", "echo ini_get('max_execution_time');"], root)
-            .map(|s| s.trim().to_string())
-            .ok();
+        let ini = wp.php_ini(root).ok();
+        let memory_limit = ini.map(|i| i.memory_limit.trim().to_string());
+        let max_execution_time = ini.map(|i| i.max_execution_time.trim().to_string());
 
         match &memory_limit {
             Some(limit) => {
