@@ -23,7 +23,8 @@ WP Agent automates common WordPress maintenance checks, helping you identify pot
 - **Comprehensive diagnostics**:
   - Database integrity and optimization checks
   - Plugin updates, security audits, and redundant-plugin detection (e.g. duplicate security scanners or image optimizers)
-  - PHP version and system resource monitoring
+  - PHP patch status: running PHP vs. php.net's latest release per branch, end-of-life PHP branches and Ubuntu releases
+  - System resource monitoring
   - Network connectivity verification
   - Security checksums and debug mode detection
   - Compromise detection: `LD_PRELOAD` rootkits, processes and files hidden from `ps`/`ls`, binaries running from temp dirs, extra `dockerd` daemons, PHP webshells in uploads

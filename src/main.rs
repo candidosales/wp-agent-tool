@@ -17,6 +17,7 @@ use diagnosis::performance::PerformanceDiagnosis;
 use diagnosis::maintenance::MaintenanceDiagnosis;
 use diagnosis::errorlog::ErrorLogDiagnosis;
 use diagnosis::scanner::ScannerDiagnosis;
+use diagnosis::patches::PatchesDiagnosis;
 use diagnosis::compromise::CompromiseDiagnosis;
 
 fn main() -> anyhow::Result<()> {
@@ -53,6 +54,7 @@ fn main() -> anyhow::Result<()> {
         Box::new(DatabaseDiagnosis),
         Box::new(PluginDiagnosis),
         Box::new(SystemDiagnosis),
+        Box::new(PatchesDiagnosis),
         Box::new(NetworkDiagnosis),
         Box::new(SecurityDiagnosis),
         Box::new(CompromiseDiagnosis),

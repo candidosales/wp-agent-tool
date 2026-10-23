@@ -41,10 +41,18 @@ WP Agent provides comprehensive WordPress diagnostics and maintenance checks.
 
 ### 💻 System
 
-- **PHP version**: Checks PHP version and WordPress compatibility
 - **Disk usage**: Monitors disk space, especially `/tmp` directory
 - **Memory limits**: Reviews PHP memory settings
 - **Server information**: Reports OS and server configuration
+
+### 🩹 Patches
+
+- **Patched PHP**: Compares each PHP against the latest release of its branch from php.net (built-in list when offline); behind = ERROR, end-of-life branch = ERROR
+- **PHP the site runs**: Reads the executables of running `lsphp`/`php-fpm`/`php-cgi` workers, not just wp-cli's PHP, and warns when the two branches differ
+- **Distro builds**: Ubuntu/Debian PHP (`8.1.2-1ubuntu2.20`) backports fixes without changing the version, so it gets a "confirm with apt" warning instead of an error
+- **Ubuntu end of life**: Warns when the LTS release is past standard support (LiteSpeed and PHP PPAs stop publishing builds, so PHP can't be patched) or is an interim release
+
+Test: `e2e/patches.sh` (needs Docker and network).
 
 ### 🌐 Network
 
