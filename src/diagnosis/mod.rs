@@ -30,4 +30,5 @@ pub mod performance;
 pub mod maintenance;
 pub mod errorlog;
 pub mod scanner;
+pub mod patches;
 pub mod compromise;
