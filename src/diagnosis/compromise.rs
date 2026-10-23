@@ -139,8 +139,10 @@ impl CompromiseDiagnosis {
             let Ok(entries) = fs::read_dir(&real) else { continue };
             for entry in entries.flatten() {
                 let name = entry.file_name().to_string_lossy().to_string();
+                // ls prints a name containing '\n' as several lines.
+                let listed = seen_by_ls.contains(&name) || name.split('\n').all(|p| seen_by_ls.contains(p));
                 // Re-check existence so files deleted after ls ran aren't reported.
-                if !seen_by_ls.contains(&name) && entry.path().symlink_metadata().is_ok() {
+                if !listed && entry.path().symlink_metadata().is_ok() {
                     hidden.push(real.join(&name).display().to_string());
                 }
             }

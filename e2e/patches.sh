@@ -18,6 +18,8 @@ run eol      20.04 8.3.21        7.4.33
 run offline  20.04 8.3.21        7.4.33 --network none
 run distro   22.04 ""            8.1.2-1ubuntu2.20
 run patched  26.04 "$latest83"   "$latest83"
+# SYS_PTRACE: lets container root read other users' /proc/<pid>/exe, as host root can.
+run planted  24.04 ""            "$latest83" --cap-add SYS_PTRACE -e PLANT=1
 
 fail=0
 # Only the Patches summary row and its details section count.
@@ -42,6 +44,9 @@ expect distro "Ubuntu 22.04 is supported until 2027-06"
 reject distro "ERROR:"
 
 expect patched "| OK         | PHP and OS are on supported, patched releases"
+
+expect planted "| OK         | PHP and OS are on supported, patched releases"
+reject planted "/tmp/php-fpm"
 
 [ "$fail" = 0 ] && echo "PASS: patches E2E (latest 8.3 = $latest83, reports in $out/)"
 exit "$fail"

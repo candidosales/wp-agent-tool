@@ -2,6 +2,7 @@ use crate::diagnosis::{Diagnosis, DiagnosisReport, Status};
 use crate::wp::WpCli;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
+use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 use std::process::Command;
 use std::time::Duration;
@@ -99,7 +100,8 @@ impl PatchesDiagnosis {
             }
             let Ok(exe) = fs::read_link(entry.path().join("exe")) else { continue };
             let name = exe.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
-            if PHP_SERVER_PREFIXES.iter().any(|p| name.starts_with(p)) {
+            // We run `<exe> -v`, usually as root: skip anything another user could have planted.
+            if PHP_SERVER_PREFIXES.iter().any(|p| name.starts_with(p)) && Self::root_controlled(&exe) {
                 exes.insert(exe.display().to_string());
             }
         }
@@ -110,6 +112,12 @@ impl PatchesDiagnosis {
                 Some((exe, version))
             })
             .collect()
+    }
+
+    /// Owned by root and not group/world-writable, along with its parent dir.
+    fn root_controlled(exe: &Path) -> bool {
+        let safe = |p: &Path| fs::metadata(p).is_ok_and(|m| m.uid() == 0 && m.mode() & 0o022 == 0);
+        safe(exe) && exe.parent().is_some_and(safe)
     }
 
     /// "PHP 8.3.36 (litespeed) (built: ...)" -> "8.3.36"

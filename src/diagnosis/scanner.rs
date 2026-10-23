@@ -50,7 +50,7 @@ impl Diagnosis for ScannerDiagnosis {
             }
         };
 
-        let tail = match Self::tail_file(&log_path, TAIL_LINES) {
+        let tail = match super::tail_file(&log_path, TAIL_LINES) {
             Ok(t) => t,
             Err(e) => {
                 details.push(format!("Found access log at {:?} but could not read it: {}", log_path, e));
@@ -138,12 +138,6 @@ impl ScannerDiagnosis {
         None
     }
 
-    fn tail_file(path: &Path, max_lines: usize) -> std::io::Result<String> {
-        let contents = std::fs::read_to_string(path)?;
-        let lines: Vec<&str> = contents.lines().collect();
-        let start = lines.len().saturating_sub(max_lines);
-        Ok(lines[start..].join("\n"))
-    }
 
     fn analyze_access_log(log_tail: &str) -> AccessLogStats {
         let mut per_ip: HashMap<String, IpStats> = HashMap::new();
