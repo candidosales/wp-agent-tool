@@ -12,9 +12,7 @@ RUN echo "postfix postfix/main_mailer_type select Internet Site" | debconf-set-s
  && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends postfix && rm -rf /var/lib/apt/lists/*
 COPY --from=build /src/target/release/wp-agent /usr/local/bin/wp-agent
 COPY e2e/exposure-mail/scenario.sh /e2e/
-# Stub wp-cli: active plugins from $PLUGINS (comma-separated), users from $USERS (JSON);
-# everything else fails fast.
-RUN printf '#!/bin/sh\ncase "$*" in\n  *"plugin list --status=active"*) echo "$PLUGINS" | tr , "\\n";;\n  *"user list"*) echo "$USERS";;\n  *) exit 1;;\nesac\n' > /usr/local/bin/wp \
- && chmod +x /usr/local/bin/wp \
- && mkdir -p /var/www/html/wp-content/uploads/2024/01 && echo '<?php' > /var/www/html/wp-config.php \
+COPY e2e/exposure-mail/wp /usr/local/bin/wp
+RUN mkdir -p /var/www/html/wp-content/uploads/2024/01 \
+ && echo '<?php' > /var/www/html/wp-config.php \
  && touch /var/www/html/wp-content/uploads/2024/01/photo.jpg

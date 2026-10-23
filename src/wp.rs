@@ -6,9 +6,46 @@ use std::fs;
 use std::io::copy;
 use std::os::unix::fs::PermissionsExt;
 use std::os::unix::fs::MetadataExt;
+use std::cell::OnceCell;
+use serde::Deserialize;
 
+#[derive(Deserialize, Debug)]
+pub struct Plugin {
+    pub name: String,
+    pub status: String,
+    // "available"/"none" for plugins; drop-ins and must-use plugins report `false`.
+    pub update: serde_json::Value,
+    pub version: String,
+}
+
+/// PHP settings as seen by the PHP wp-cli runs under.
+#[derive(Deserialize, Debug)]
+pub struct PhpIni {
+    pub memory_limit: String,
+    pub max_execution_time: String,
+    pub error_log: String,
+}
+
+#[derive(Deserialize, Debug, Default)]
+#[serde(default)]
+pub struct CliInfo {
+    pub wp_cli_version: String,
+    pub php_version: String,
+}
+
+/// Facts are loaded on first use and cached for the run, failures included, so
+/// every diagnosis sees the same answer. The cache ignores `root`: one run, one site.
 pub struct WpCli {
     executable_path: PathBuf,
+    plugins: OnceCell<Result<Vec<Plugin>, String>>,
+    php_ini: OnceCell<Result<PhpIni, String>>,
+    cli_info: OnceCell<Result<CliInfo, String>>,
+}
+
+fn cached<T>(cell: &OnceCell<Result<T, String>>, load: impl FnOnce() -> anyhow::Result<T>) -> anyhow::Result<&T> {
+    cell.get_or_init(|| load().map_err(|e| e.to_string()))
+        .as_ref()
+        .map_err(|e| anyhow::anyhow!("{}", e))
 }
 
 impl WpCli {
@@ -16,6 +53,9 @@ impl WpCli {
         // Default to "wp" in path, or specific logic to find it later
         WpCli {
             executable_path: PathBuf::from("wp"),
+            plugins: OnceCell::new(),
+            php_ini: OnceCell::new(),
+            cli_info: OnceCell::new(),
         }
     }
 
@@ -179,11 +219,17 @@ impl WpCli {
             .ok_or_else(|| anyhow::anyhow!("$table_prefix not found in wp-config.php"))
     }
 
+    /// Every plugin, drop-in and must-use plugin. No fallback: update status needs wp-cli.
+    pub fn plugins(&self, root: &Path) -> anyhow::Result<&[Plugin]> {
+        cached(&self.plugins, || Ok(serde_json::from_str(&self.run(&["plugin", "list", "--format=json"], root)?)?))
+            .map(Vec::as_slice)
+    }
+
     /// Slugs of active plugins, read from the `active_plugins` option when wp-cli
     /// can't boot WordPress.
     pub fn active_plugins(&self, root: &Path) -> anyhow::Result<Vec<String>> {
-        let wp_err = match self.run(&["plugin", "list", "--status=active", "--field=name"], root) {
-            Ok(out) => return Ok(out.lines().map(str::trim).filter(|l| !l.is_empty()).map(String::from).collect()),
+        let wp_err = match self.plugins(root) {
+            Ok(plugins) => return Ok(plugins.iter().filter(|p| p.status == "active").map(|p| p.name.clone()).collect()),
             Err(e) => e,
         };
         let prefix = self.table_prefix(root)?;
@@ -198,6 +244,17 @@ impl WpCli {
             .step_by(2)
             .map(|file| file.split('/').next().unwrap_or(file).trim_end_matches(".php").to_string())
             .collect())
+    }
+
+    pub fn php_ini(&self, root: &Path) -> anyhow::Result<&PhpIni> {
+        const EVAL: &str = "echo json_encode(['memory_limit' => (string) ini_get('memory_limit'), \
+            'max_execution_time' => (string) ini_get('max_execution_time'), 'error_log' => (string) ini_get('error_log')]);";
+        cached(&self.php_ini, || Ok(serde_json::from_str(&self.run(&["eval", EVAL], root)?)?))
+    }
+
+    /// `wp cli info`: runs without booting WordPress.
+    pub fn cli_info(&self, root: &Path) -> anyhow::Result<&CliInfo> {
+        cached(&self.cli_info, || Ok(serde_json::from_str(&self.run(&["cli", "info", "--format=json"], root)?)?))
     }
 
     fn raw_query(&self, root: &Path, query: &str) -> anyhow::Result<String> {

@@ -75,8 +75,8 @@ impl ErrorLogDiagnosis {
         }
 
         // Fall back to whatever PHP itself is configured to use.
-        if let Ok(output) = wp.run(&["eval", "echo ini_get('error_log');"], root) {
-            let trimmed = output.trim();
+        if let Ok(ini) = wp.php_ini(root) {
+            let trimmed = ini.error_log.trim();
             if !trimmed.is_empty() {
                 let path = PathBuf::from(trimmed);
                 if path.exists() {
