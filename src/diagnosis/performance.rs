@@ -15,33 +15,15 @@ impl Diagnosis for PerformanceDiagnosis {
         // 1. Check Autoloaded Options Size
         eprintln!("    > Checking autoloaded options size...");
 
-        let prefix = wp.run(&["config", "get", "table_prefix"], root).ok();
-        match &prefix {
-            Some(prefix) => {
-                 let prefix = prefix.trim();
-                 let query = format!("SELECT SUM(LENGTH(option_value)) FROM {}options WHERE autoload = 'yes'", prefix);
-                 match wp.run(&["db", "query", &query, "--skip-column-names"], root) {
-                     Ok(size_str) => {
-                         self.analyze_autoload_size(&size_str, &mut overall_status, &mut details);
-                     }
-                     Err(wp_err) => {
-                         details.push(format!(
-                             "wp-cli db query failed, falling back to raw DB connection. wp-cli error: {}",
-                             wp_err
-                         ));
-                         match wp.raw_query(root, &query) {
-                             Ok(size_str) => {
-                                 self.analyze_autoload_size(&size_str, &mut overall_status, &mut details);
-                             }
-                             Err(raw_err) => details.push(format!(
-                                 "Could not determine autoloaded options size (raw DB fallback also failed: {}).",
-                                 raw_err
-                             )),
-                         }
-                     }
-                 }
+        match wp.table_prefix(root) {
+            Ok(prefix) => {
+                let query = format!("SELECT SUM(LENGTH(option_value)) FROM {}options WHERE autoload = 'yes'", prefix);
+                match wp.query(root, &query) {
+                    Ok(size_str) => self.analyze_autoload_size(&size_str, &mut overall_status, &mut details),
+                    Err(e) => details.push(format!("Could not determine autoloaded options size: {}", e)),
+                }
             }
-            None => details.push("Could not determine table prefix.".to_string()),
+            Err(e) => details.push(format!("Could not determine table prefix: {}", e)),
         }
 
         // 2. Check Cron: flag DISABLE_WP_CRON with no real replacement, not just "command ran ok".
@@ -49,12 +31,13 @@ impl Diagnosis for PerformanceDiagnosis {
         self.analyze_cron(wp, root, &mut overall_status, &mut details);
 
         // 3. PHP memory_limit / max_execution_time vs plugin count
+        let active_plugins = wp.active_plugins(root).unwrap_or_default();
         eprintln!("    > Checking PHP limits...");
-        self.analyze_php_limits(wp, root, &mut overall_status, &mut details);
+        self.analyze_php_limits(wp, root, active_plugins.len(), &mut overall_status, &mut details);
 
         // 4. Object Cache
         eprintln!("    > Checking object cache...");
-        self.analyze_object_cache(wp, root, &mut details);
+        self.analyze_object_cache(&active_plugins, root, &mut details);
 
         // 5. Divi responsive-image CPU risk on constrained hardware
         eprintln!("    > Checking image processing CPU risk...");
@@ -152,11 +135,7 @@ impl PerformanceDiagnosis {
         false
     }
 
-    fn analyze_php_limits(&self, wp: &WpCli, root: &Path, status: &mut Status, details: &mut Vec<String>) {
-        let active_plugin_count = wp
-            .run(&["plugin", "list", "--status=active", "--field=name", "--format=csv"], root)
-            .map(|s| s.lines().filter(|l| !l.trim().is_empty() && *l != "name").count())
-            .unwrap_or(0);
+    fn analyze_php_limits(&self, wp: &WpCli, root: &Path, active_plugin_count: usize, status: &mut Status, details: &mut Vec<String>) {
 
         let memory_limit = wp
             .run(&["eval", "echo ini_get('memory_limit');"], root)
@@ -213,7 +192,7 @@ impl PerformanceDiagnosis {
         }
     }
 
-    fn analyze_object_cache(&self, wp: &WpCli, root: &Path, details: &mut Vec<String>) {
+    fn analyze_object_cache(&self, active_plugins: &[String], root: &Path, details: &mut Vec<String>) {
         let mut found: Vec<String> = Vec::new();
 
         for (plugin, label) in [
@@ -221,7 +200,7 @@ impl PerformanceDiagnosis {
             ("w3-total-cache", "W3 Total Cache"),
             ("litespeed-cache", "LiteSpeed Cache plugin (object cache)"),
         ] {
-            if wp.run(&["plugin", "is-active", plugin], root).is_ok() {
+            if active_plugins.iter().any(|p| p == plugin) {
                 found.push(label.to_string());
             }
         }
